@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="a" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1000 1000">
+  <defs>
+    <linearGradient id="b" x1="-37.92" y1="609.74" x2="1040.68" y2="279.98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#861f20"/>
+      <stop offset="1" stop-color="#d83541"/>
+    </linearGradient>
+    <linearGradient id="c" x1="210.08" y1="522.04" x2="490.15" y2="612.75" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#000" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="d" x1="544.53" y1="724.43" x2="868.74" y2="595.96" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#000" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="e" x1="601.92" y1="895.77" x2="904.32" y2="775.94" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#000" stop-opacity="0"/>
+      <stop offset=".5" stop-color="#000" stop-opacity=".4"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="f" x1="-40.18" y1="721.96" x2="1039.7" y2="391.8" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#861f20"/>
+      <stop offset="1" stop-color="#d83541"/>
+    </linearGradient>
+  </defs>
+  <path d="M0,79.57L467.14,909.35l482.14-312.85-51.88-154.22-377.63,241.66L124.87,0,0,79.57ZM503.81,976.37l470.45-305.27,25.74,69.08-482.84,259.82-13.35-23.63Z" fill="url(#b)"/>
+  <path d="M212.87,457.42l68.93-184.62,210.64,363.78-47.24,234.06L212.87,457.42Z" fill="url(#c)" fill-rule="evenodd"/>
+  <polygon points="527.75 678.79 842.44 477.46 881.52 640.46 567.38 844.3 527.75 678.79" fill="url(#d)" fill-rule="evenodd"/>
+  <polygon points="900.91 718.7 917.23 784.72 602.11 954.29 592.21 919.01 900.91 718.7" fill="url(#e)" fill-rule="evenodd"/>
+  <path d="M125.43,999.85L479.93,1.1l110.17,.05,298.62,998.65h-169.93L504.36,212.36l-210.72,787.54-168.22-.05Z" fill="url(#f)" fill-rule="evenodd"/>
+</svg>
