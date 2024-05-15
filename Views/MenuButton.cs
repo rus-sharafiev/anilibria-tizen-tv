@@ -12,25 +12,14 @@ namespace AnilibriaAppTizen.Views
         private string _activeIconUrl = string.Empty;
         private string _text = string.Empty;
         private string _key = string.Empty;
-        private readonly int _iconSize = 48;
+        private readonly int _iconSize = 40;
 
-        private ImageView _icon;
+        private VisualView _icon;
+        private SVGVisual _iconVisual;
         private readonly Menu _menu;
 
         public event EventHandler FocusGained;
         public event EventHandler FocusLost;
-
-        public string IconUrl
-        {
-            get { return _iconUrl; }
-            set { _iconUrl = value; }
-        }
-
-        public string ActiveIconUrl
-        {
-            get { return _activeIconUrl; }
-            set {  _activeIconUrl = value; }
-        }
 
         public string Text
         {
@@ -49,6 +38,10 @@ namespace AnilibriaAppTizen.Views
             get { return _btn; } 
         }
 
+        public View Icon
+        {
+            get { return _icon; }
+        }
 
         public MenuButton(Menu menu) 
         { 
@@ -57,29 +50,38 @@ namespace AnilibriaAppTizen.Views
 
         private void OnIntialize()
         {
+            _iconUrl = _menu.SharedRes + "icons/" + _key + ".svg";
+            _activeIconUrl = _menu.SharedRes + "icons/" + _key + "_filled.svg";
+
             _btn = new View
             {
                 Focusable = Key != "logo",
                 SizeHeight = _menu.CollapsedWidth,
                 SizeWidth = _menu.CollapsedWidth,
-                Name = _key,
+                Name = "MenuButton-" + _key,
                 Opacity = Key != "logo" ? 0.5f : 1,
             };
 
-            _icon = new ImageView
+            _icon = new VisualView()
             {
-                ResourceUrl = _iconUrl,
-                Size2D = new Size2D(_iconSize, _iconSize),
+                Opacity = 0.8f,
+                Size = new Size2D(_iconSize, _iconSize),
                 PositionX = (_menu.CollapsedWidth - _iconSize) / 2,
                 PositionY = (_menu.CollapsedWidth - _iconSize) / 2,
             };
             _btn.Add(_icon);
 
+            _iconVisual = new SVGVisual
+            {
+                URL = _iconUrl
+            };
+            _icon.AddVisual($"{_key}-icon", _iconVisual);
+
             TextLabel label = new TextLabel
             {
                 Text = _text,
-                FontFamily = "Roboto",
-                PixelSize = 28,
+                FontFamily = _key == "logo" ? "Roboto Thin" : "Roboto Light",
+                PixelSize = _key == "logo" ? 32 : 24,
                 TextColor = Color.White,
                 PositionX = _menu.CollapsedWidth,
                 SizeHeight = _menu.CollapsedWidth,
@@ -89,21 +91,35 @@ namespace AnilibriaAppTizen.Views
 
             _btn.FocusGained += (obj, e) =>
             {
-                //_icon.SetImage(_activeIconUrl);
-                AnimateOpacityTo(1);
-
+                AnimateIconScaleTo(1.2f);
                 FocusGained.Invoke(this, EventArgs.Empty);
             };
             _btn.FocusLost += (obj, e) =>
             {
-                //_icon.SetImage(_iconUrl);
-                AnimateOpacityTo(0.5f);
-
+                AnimateIconScaleTo(1);
                 FocusLost?.Invoke(this, EventArgs.Empty);
             };
             _btn.RightFocusableView = null; 
             _btn.LeftFocusableView = null;
 
+            _menu.ActiveButtonChanged += Menu_ActiveButtonChanged;
+
+            if (_key == "settings")
+                FlexLayout.SetFlexAlignmentSelf(_btn, FlexLayout.AlignmentType.FlexEnd);
+        }
+
+        private void Menu_ActiveButtonChanged(object sender, EventArgs e)
+        {
+            if (_menu.ActiveButton == this)
+            {
+                _iconVisual.URL = _activeIconUrl;
+                AnimateOpacityTo(1);
+            }
+            else if (_iconVisual.URL == _activeIconUrl)
+            {
+                _iconVisual.URL = _iconUrl;
+                AnimateOpacityTo(0.8f);
+            }
         }
 
         public View GetView()
@@ -116,12 +132,27 @@ namespace AnilibriaAppTizen.Views
             parent.Add(_btn);
         }
 
-        private Animation AnimateOpacityTo(float destination)
+        private void AnimateOpacityTo(float destination)
         {
             var animation = new Animation(140);
             animation.AnimateTo(_btn, "Opacity", destination);
             animation.Play();
-            return animation;
+            animation.Finished += (a, ev) =>
+            {
+                if (a is Animation ani) ani.Dispose();
+            };
+        }
+
+        private void AnimateIconScaleTo(float destination)
+        {
+            var animation = new Animation(140);
+            animation.AnimateTo(_btn, "ScaleX", destination);
+            animation.AnimateTo(_btn, "ScaleY", destination);
+            animation.Play();
+            animation.Finished += (a, ev) =>
+            {
+                if (a is Animation ani) ani.Dispose();
+            };
         }
     }
 }

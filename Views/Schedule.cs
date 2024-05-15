@@ -179,9 +179,6 @@ namespace AnilibriaAppTizen.Views
             }
 
             mainPage.ActiveMenuButton.View.RightFocusableView = _lastFocusedView;
-
-            //if (_lastFocusedView != null)
-            //    FocusManager.Instance.SetCurrentFocusView(_lastFocusedView);
         }
 
         private void DayLabel_FocusGained(object sender, EventArgs e)
@@ -209,6 +206,10 @@ namespace AnilibriaAppTizen.Views
                 scaleAnimation.AnimateTo(releaseImage, "ScaleX", 1.2f, _easeOut);
                 scaleAnimation.AnimateTo(releaseImage, "ScaleY", 1.2f, _easeOut);
                 scaleAnimation.Play();
+                scaleAnimation.Finished += (a, ev) =>
+                {
+                    if (a is Animation ani) ani.Dispose();
+                };
 
                 ScrollTo(releaseContainer);
             }
@@ -226,6 +227,10 @@ namespace AnilibriaAppTizen.Views
                 scaleAnimation.AnimateTo(releaseImage, "ScaleX", 1.0f, _easeOut);
                 scaleAnimation.AnimateTo(releaseImage, "ScaleY", 1.0f, _easeOut);
                 scaleAnimation.Play();
+                scaleAnimation.Finished += (a, ev) =>
+                {
+                    if (a is Animation ani) ani.Dispose();
+                };
 
                 var row = uint.Parse(releaseContainer.Name.Split("_")[1]);
                 _prewSelectedRow = row;

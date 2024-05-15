@@ -15,44 +15,54 @@ namespace AnilibriaAppTizen.Views
         readonly int windowSizeHeight = Window.Instance.Size.Height;
         #pragma warning restore CS0618
 
-        private readonly string _resPath;
+        private readonly MainPage _mainPage;
+        private readonly AlphaFunction _easeOut;
+
         private View _menuView;
+        private Animation _animation;
 
         private MenuButton _activeBtn;
-        public event EventHandler BtnFocusGained;
-        public event EventHandler BtnFocusLost;
+        private List<View> _btnViews;
 
-        public MenuButton ActiveButton 
-        {  
-            get { return _activeBtn; } 
-        }
+        public event EventHandler ActiveButtonChanged;
 
-        public View View 
-        { 
-            get { return _menuView; } 
-        }
-
-        public int CollapsedWidth 
-        { 
-            get { return _collapsedWidth; } 
-        }
-
-        public int ExpandedWidth 
-        { 
-            get { return _expandedWidth; } 
-        }
-
-        public Menu(string sharedResource) 
+        public MenuButton ActiveButton
         {
-            _resPath = sharedResource;
+            get { return _activeBtn; }
+        }
+
+        public View View
+        {
+            get { return _menuView; }
+        }
+
+        public int CollapsedWidth
+        {
+            get { return _collapsedWidth; }
+        }
+
+        public int ExpandedWidth
+        {
+            get { return _expandedWidth; }
+        }
+
+        public string SharedRes
+        {
+            get { return _mainPage.SharedRes; }
+        }
+
+        public Menu(MainPage mainPage)
+        {
+            _mainPage = mainPage;
+            _easeOut =  new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
         }
 
         private readonly Button[] menuItems =
         {
-            new Button() {Key = "logo", Name = "Anilibria", Icon = "anilibria"},
-            new Button() {Key = "home", Name = "Главная", Icon = "home"},
-            new Button() {Key = "schedule", Name = "Расписание", Icon = "calendar"},
-            new Button() {Key = "settings", Name = "Настройки", Icon = "settings"},
+            new Button() {Key = "logo", Name = "Anilibria"},
+            new Button() {Key = "home", Name = "Главная"},
+            new Button() {Key = "schedule", Name = "Расписание"},
+            new Button() {Key = "settings", Name = "Настройки"},
         };
 
         public void RenderTo(View view)
@@ -69,67 +79,90 @@ namespace AnilibriaAppTizen.Views
                 Focusable = false,
                 ClippingMode = ClippingModeType.ClipChildren
             };
-            FocusManager.Instance.SetAsFocusGroup(_menuView, true);
-            FocusManager.Instance.FocusGroupChanged += FocusInstance_FocusGroupChanged;
             view.Add(_menuView);
 
-            List<View> btnViews = new List<View>();
+            _btnViews = new List<View>();
             foreach (var btn in menuItems)
             {
                 var menuBtn = new MenuButton(this)
                 {
-                    IconUrl = _resPath + "icons/" + btn.Icon + ".svg",
-                    ActiveIconUrl = _resPath + "icons/" + btn.Icon + "_black.svg",
                     Text = btn.Name,
                     Key = btn.Key,
                 };
                 _menuView.Add(menuBtn.View);
                 menuBtn.FocusGained += MenuBtn_FocusGained;
-                menuBtn.FocusLost += MenuBtn_FocusLost;
+
                 if (btn.Key == "home")
+                {
                     _activeBtn = menuBtn;
+                    ActiveButtonChanged?.Invoke(this, EventArgs.Empty);
+                }
 
                 if (btn.Key != "logo")
-                    btnViews.Add(menuBtn.View);
+                    _btnViews.Add(menuBtn.View);
             }
 
-            for (int j = 0; j < btnViews.Count; j++)
+            for (int j = 0; j < _btnViews.Count; j++)
             {
                 if (j != 0)
-                    btnViews[j].UpFocusableView = btnViews[j - 1];
+                    _btnViews[j].UpFocusableView = _btnViews[j - 1];
 
-                if (j < btnViews.Count - 1)
-                    btnViews[j].DownFocusableView = btnViews[j + 1];
+                if (j < _btnViews.Count - 1)
+                    _btnViews[j].DownFocusableView = _btnViews[j + 1];
             }
 
-
-        }
-
-        private void FocusInstance_FocusGroupChanged(object sender, FocusManager.FocusGroupChangedEventArgs e)
-        {
-            Debug.WriteLine($"focus group {e.CurrentView.Name}");
+            FocusManager.Instance.FocusChanged += FocusManagerInstance_FocusChanged;
         }
 
         private void MenuBtn_FocusGained(object sender, EventArgs e)
         {
-            if (sender is MenuButton menuButton)
+            if (sender is MenuButton menuButton && menuButton != _activeBtn)
             {
                 _activeBtn = menuButton;
-                BtnFocusGained.Invoke(this, EventArgs.Empty);
+                ActiveButtonChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        private void MenuBtn_FocusLost(object sender, EventArgs e)
+        private void FocusManagerInstance_FocusChanged(object sender, FocusManager.FocusChangedEventArgs e)
         {
-            BtnFocusLost.Invoke(this, EventArgs.Empty);
+            if (e.NextView != null)
+            {
+                if (e.NextView.Name.Contains("MenuButton"))
+                {
+                    if (e.CurrentView == null || !e.CurrentView.Name.Contains("MenuButton"))
+                    {
+                        AnimateMenuWidthTo(_expandedWidth);
+                    }
+                }
+                else
+                {
+                    AnimateMenuWidthTo(_collapsedWidth);
+                }
+            }
         }
 
+        private void AnimateMenuWidthTo(int destination)
+        {
+            if (_animation != null)
+            {
+                if (_animation.State == Animation.States.Playing)
+                {
+                    _animation.Stop();
+                }
+                _animation.Clear();
+                _animation.Dispose();
+            }
+            _animation = new Animation(280);
+            _animation.AnimateTo(_menuView, "SizeWidth", destination, _easeOut);
+            _animation.AnimateTo(_mainPage.View, "PositionX", destination, _easeOut);
+            _animation.AnimateTo(_mainPage.TitleView, "PositionX", destination, _easeOut);
+            _animation.Play();
+        }
     }
 
     class Button
     {
         public string Key { get; set; }
         public string Name { get; set; }
-        public string Icon { get; set; }
     }
 }

@@ -23,16 +23,22 @@ namespace AnilibriaAppTizen.Views
         private readonly Schedule _schedule;
         private readonly Home _home;
         private readonly Settings _settings;
+        private readonly string _resPath;
 
         private View _view;
         private Menu _menu;
         private View _mainPageView;
         private View _mainTitleView;
         private TextLabel _title;
+        private Animation _opacityAnimation;
 
         public View View
         {
             get { return _mainPageView; }
+        }
+        public View TitleView
+        {
+            get { return _mainTitleView; }
         }
 
         public Menu Menu
@@ -45,9 +51,10 @@ namespace AnilibriaAppTizen.Views
             get { return _menu.ActiveButton; }
         }
 
-        private readonly string _resPath;
-
-        private Animation _opacityAnimation;
+        public string SharedRes
+        {
+            get { return _resPath; }
+        }
 
 
         public MainPage(string resPath, ApiService apiService, ImageService imageService, Release releaseView)
@@ -66,10 +73,9 @@ namespace AnilibriaAppTizen.Views
         {
             _view = new View();
 
-            _menu = new Menu(_resPath);
+            _menu = new Menu(this);
             _menu.RenderTo(_view);
-            _menu.BtnFocusGained += MenuView_BtnFocusGained;
-            _menu.BtnFocusLost += MenuView_BtnFocusLost;
+            _menu.ActiveButtonChanged += Menu_ActiveButtonChanged;
 
             _mainPageView = new View
             {
@@ -108,7 +114,7 @@ namespace AnilibriaAppTizen.Views
             Window.Instance.Add(_view);
         }
 
-        private void MenuView_BtnFocusGained(object sender, System.EventArgs e)
+        private void Menu_ActiveButtonChanged(object sender, System.EventArgs e)
         {
             switch (_menu.ActiveButton.Key)
             {
@@ -133,16 +139,6 @@ namespace AnilibriaAppTizen.Views
                     }
                     break;
             }
-            
-            if (_menu.View.Children.Any(child => child.HasFocus()))
-                AnimateMenuWidthTo(_menu.ExpandedWidth);
-        }
-
-
-        private void MenuView_BtnFocusLost(object sender, System.EventArgs e)
-        {
-            if (!_menu.View.Children.Any(child => child.HasFocus()))
-                AnimateMenuWidthTo(_menu.CollapsedWidth);
         }
 
         public void SetTitle(string title)
@@ -157,6 +153,10 @@ namespace AnilibriaAppTizen.Views
             var animation = new Animation(140);
             animation.AnimateTo(view, "Opacity", destination);
             animation.Play();
+            animation.Finished += (a, e) =>
+            {
+                if (a is Animation ani) ani.Dispose();
+            };
             return animation;
         }
 
@@ -170,21 +170,9 @@ namespace AnilibriaAppTizen.Views
 
                 for (int i = 0; i < view.Children.Count - 1; i++)
                 {
-                    _mainTitleView.Opacity = 0;
                     view.Remove(view.Children[i]);
                 }
             }
-        }
-
-        private void AnimateMenuWidthTo(int destination)
-        {
-            var easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
-
-            var animation = new Animation(280);
-            animation.AnimateTo(_menu.View, "SizeWidth", destination, easeOut);
-            animation.AnimateTo(_mainPageView, "PositionX", destination, easeOut);
-            animation.AnimateTo(_mainTitleView, "PositionX", destination, easeOut);
-            animation.Play();
         }
     }
 }
