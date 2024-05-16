@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Tizen.Applications;
 
 namespace AnilibriaAppTizen.Services
 {
@@ -13,15 +14,14 @@ namespace AnilibriaAppTizen.Services
     {
         private const string _baseUri = "https://static.wwnd.space";
 
-        private readonly string _imageCacheFolder;
+        private readonly string _imageCacheFolder = Path.Combine(Application.Current.DirectoryInfo.Data, "cachedImages");
         private bool _isInitialized;
 
         private List<string> _imagesList;
         private readonly HttpClient client = new HttpClient();
 
-        public ImageService(string localApplicationData)
+        public ImageService()
         {
-            _imageCacheFolder = Path.Combine(localApplicationData, "cachedImages");
             _imagesList = new List<string>();
         }
 

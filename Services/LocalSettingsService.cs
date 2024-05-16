@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Tizen.Applications;
 
 namespace AnilibriaAppTizen.Services
 {
@@ -10,17 +11,16 @@ namespace AnilibriaAppTizen.Services
     {
         private readonly FileService _fileService;
 
-        private readonly string _applicationDataFolder;
+        private readonly string _applicationDataFolder = Application.Current.DirectoryInfo.Data;
         private readonly string _localsettingsFile = "localSettings.json";
 
         private IDictionary<string, object> _settings;
 
         private bool _isInitialized;
 
-        public LocalSettingsService(FileService fileService, string localApplicationData)
+        public LocalSettingsService(FileService fileService)
         {
             _fileService = fileService;
-            _applicationDataFolder = Path.Combine(localApplicationData);
             _settings = new Dictionary<string, object>();
         }
 

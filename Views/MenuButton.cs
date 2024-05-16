@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 
@@ -7,12 +7,14 @@ namespace AnilibriaAppTizen.Views
 {
     internal class MenuButton
     {
+        private readonly string _sharedRes = Application.Current.DirectoryInfo.SharedResource;
+        private readonly int _iconSize = 32;
+
         private View _btn;
         private string _iconUrl = string.Empty;
         private string _activeIconUrl = string.Empty;
         private string _text = string.Empty;
         private string _key = string.Empty;
-        private readonly int _iconSize = 40;
 
         private VisualView _icon;
         private SVGVisual _iconVisual;
@@ -50,8 +52,8 @@ namespace AnilibriaAppTizen.Views
 
         private void OnIntialize()
         {
-            _iconUrl = _menu.SharedRes + "icons/" + _key + ".svg";
-            _activeIconUrl = _menu.SharedRes + "icons/" + _key + "_filled.svg";
+            _iconUrl = _sharedRes + "icons/" + _key + ".svg";
+            _activeIconUrl = _sharedRes + "icons/" + _key + "_filled.svg";
 
             _btn = new View
             {
