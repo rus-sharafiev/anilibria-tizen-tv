@@ -21,7 +21,7 @@ namespace AnilibriaAppTizen.Views
         private readonly float _fontSize = 48;
         private readonly int _animationDuration = 280;
 
-        private TableView _scheduleView;
+        private View _scheduleView;
         private WeekDay[] _weekDays;
 
         private Animation _scheduleScrollAnimation;
@@ -35,8 +35,8 @@ namespace AnilibriaAppTizen.Views
         float _posterHeight;
         Size _posterSize;
 
-        public bool IsActive { get { return _isActive; }}
-        public View LastFocusedView {  get { return _lastFocusedView; }}
+        public bool IsActive { get { return _isActive; } }
+        public View LastFocusedView { get { return _lastFocusedView; } }
 
         public Schedule(ApiService apiService, ImageService imageService)
         {
@@ -50,7 +50,7 @@ namespace AnilibriaAppTizen.Views
         public async void RenderTo(MainPage mainPage, Release release, bool updateData = false)
         {
             _isActive = true;
-            mainPage.SetTitle("Расписание");
+            mainPage.SetTitle("Расписание", "выхода новых эпизодов", 320);
 
             _mainPageView = mainPage.View;
             _release = release;
@@ -80,184 +80,130 @@ namespace AnilibriaAppTizen.Views
             {
                 loading.Remove();
             }
-
-            _scheduleView = new TableView()
+            var rows = 20;
+            _scheduleView = new View()
             {
-                Columns = _columns,
-                CellPadding = new Vector2(4, 4),
+                Layout = new GridLayout
+                {
+                    Columns = _columns,
+                    Rows = rows,
+                    ColumnSpacing = 8,
+                    RowSpacing = 8,
+                    GridOrientation = GridLayout.Orientation.Horizontal,
+                },
                 PositionX = _mainPageView.SizeWidth * 0.01f,
             };
             _mainPageView.Add(_scheduleView);
             _scheduleView.RemovedFromWindow += ScheduleView_RemovedFromWindow;
 
-            for (uint i = 0; i < _columns; i++)
-            {
-                _scheduleView.SetFitWidth(i);
-            }
+            var focusMatrixRow = 0;
+            var focusMatrix = new View[rows, _columns];
 
-            uint row = 0;
+            int row = 0;
             foreach (var day in _weekDays)
             {
-                uint column = 0;
-                if (!day.IsFirst)
-                    _scheduleView.InsertRow(++row);
-                _scheduleView.SetFixedHeight(row, _fontSize + _posterHeight * 0.2f);
+                int column = 0;
+                if (!day.IsFirst) row++;
 
-                TextLabel dayLabel = new TextLabel
+                var dayLabelView = new View
+                {
+                    SizeHeight = _fontSize + (day.IsFirst ? 0 : _posterHeight * 0.1f),
+                };
+                _scheduleView.Add(dayLabelView);
+
+                var dayLabel = new TextLabel
                 {
                     Text = day.Name,
                     TextColor = new Color(255, 255, 255, 0.5f),
-                    PixelSize = _fontSize,
-                    Focusable = !day.IsFirst,
-                    Padding = new Extents(0, 0, (ushort)(_posterHeight * 0.1f), 0),
+                    PointSize = _fontSize,
                     FontFamily = "Roboto Thin",
+                    Name = $"SheduleDayLabel_{row}",
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    PositionY = day.IsFirst ? 0 : _posterHeight * 0.1f,
                 };
-                _scheduleView.AddChild(dayLabel, new TableView.CellPosition(row, 0, 1, (uint)_columns));
-                dayLabel.Name = $"SheduleDayLabel_{row}";
-                dayLabel.FocusGained += DayLabel_FocusGained;
+                dayLabelView.Add(dayLabel);
 
-                _scheduleView.InsertRow(++row);
-                _scheduleView.SetFitHeight(row);
+                GridLayout.SetColumn(dayLabelView, 0);
+                GridLayout.SetColumnSpan(dayLabelView, _columns);
+                GridLayout.SetRow(dayLabelView, row);
+
+                row++;
+                focusMatrixRow++;
                 foreach (var dayRelease in day.Releases)
                 {
-                    View releaseContainer = new View
-                    {
-                        Focusable = true,
-                        Size = _posterSize,
-                    };
+                    var url = "https://anilibria.top" + dayRelease.Poster.Src;
+                    var releasePoster = new Poster(url, _posterSize);
+                    releasePoster.View.Name = $"ScheduleRelease_{row}_{column}";
+                    releasePoster.FocusGained += ReleasePoster_FocusGained;
 
-                    //VisualView releaseImage = new VisualView()
-                    //{
-                    //    Opacity = 0.8f,
-                    //    Size = _posterSize,
-                    //};
+                    _scheduleView.Add(releasePoster.View);
+                    GridLayout.SetColumn(releasePoster.View, column);
+                    GridLayout.SetRow(releasePoster.View, row);
 
-                    //ImageVisual imageVisual = new ImageVisual
-                    //{
-                    //    URL = "https://anilibria.top" + dayRelease.Poster.Src,
-                    //    FittingMode = FittingModeType.FitWidth,
-                    //    DesiredHeight = (int)(_posterHeight * 2.0f),
-                    //    DesiredWidth = (int)(_posterWidth * 2.0f),
-                    //};
-
-                    //releaseImage.AddVisual("Poster", imageVisual);
-
-                    View releaseImage = new View
-                    {
-                        Opacity = 0.8f,
-                        BackgroundColor = Color.White,
-                        Size = _posterSize,
-                    };
-
-                    releaseContainer.Add(releaseImage);
-
-                    releaseContainer.FocusGained += ReleaseImageContainer_FocusGained;
-                    releaseContainer.FocusLost += ReleaseImageContainer_FocusLost;
-                    //releaseImageContainer.KeyEvent += ReleaseImageContainer_KeyEvent;
-                    if (column == 0)
-                        releaseContainer.LeftFocusableView = mainPage.ActiveMenuButton.View;
-
-                    releaseContainer.Name = $"ScheduleRelease_{row}_{column}";
-                    _scheduleView.AddChild(releaseContainer, new TableView.CellPosition(row, column));
+                    focusMatrix[focusMatrixRow, column] = releasePoster.View;
 
                     if (column + 1 < _columns)
                     {
                         column++;
                     }
-                    else
+                    else if (column < day.Releases.Count - 1)
                     {
-                        _scheduleView.InsertRow(++row);
-                        _scheduleView.SetFitHeight(row);
+                        row++;
+                        focusMatrixRow++;
                         column = 0;
                     }
 
                     if (_lastFocusedView == null && dayRelease.PublishDay.Value == 1 && day.Releases[0] == dayRelease)
                     {
-                        _lastFocusedView = releaseContainer;
+                        _lastFocusedView = releasePoster.View;
                     }
                 }
             }
 
+            // Create focus matrix
+            for (int r = 0; r < focusMatrix.GetLength(0); r++)
+                for (int c = 0; c < focusMatrix.GetLength(1); c++)
+                    if (focusMatrix[r, c] != null)
+                    {
+                        if (r > 0)
+                            focusMatrix[r, c].UpFocusableView = focusMatrix[r - 1, c];
+
+                        if (r < focusMatrix.GetLength(0) - 1)
+                            focusMatrix[r, c].DownFocusableView = focusMatrix[r + 1, c];
+
+                        if (c > 0)
+                            focusMatrix[r, c].LeftFocusableView = focusMatrix[r, c - 1];
+                        else if (c == 0)
+                            focusMatrix[r, c].LeftFocusableView = mainPage.ActiveMenuButton.View;
+
+                        if (c < focusMatrix.GetLength(1) - 1)
+                            focusMatrix[r, c].RightFocusableView = focusMatrix[r, c + 1];
+                    }
+
             mainPage.ActiveMenuButton.View.RightFocusableView = _lastFocusedView;
         }
 
-        private void DayLabel_FocusGained(object sender, EventArgs e)
+        private void ReleasePoster_FocusGained(object sender, EventArgs e)
         {
-            if (sender is TextLabel textLabel)
-            {
-                var row = uint.Parse(textLabel.Name.Split("_")[1]);
-                if (_prewSelectedRow > row)
-                    FocusManager.Instance.MoveFocus(View.FocusDirection.Up);
-
-                if (_prewSelectedRow < row)
-                    FocusManager.Instance.MoveFocus(View.FocusDirection.Down);
-            }
-        }
-
-        private void ReleaseImageContainer_FocusGained(object sender, EventArgs e)
-        {
-            if (sender is View releaseContainer)
-            {
-                var releaseImage = releaseContainer.Children[0];
-                var scaleAnimation = new Animation(140);
-
-                releaseImage.BackgroundColor = Color.Green;
-                scaleAnimation.AnimateTo(releaseImage, "Opacity", 1.0f, _easeOut);
-                scaleAnimation.AnimateTo(releaseImage, "ScaleX", 1.2f, _easeOut);
-                scaleAnimation.AnimateTo(releaseImage, "ScaleY", 1.2f, _easeOut);
-                scaleAnimation.Play();
-                scaleAnimation.Finished += (a, ev) =>
-                {
-                    if (a is Animation ani) ani.Dispose();
-                };
-
-                ScrollTo(releaseContainer);
-            }
-        }
-
-        private void ReleaseImageContainer_FocusLost(object sender, EventArgs e)
-        {
-            if (sender is View releaseContainer)
-            {
-                var releaseImage = releaseContainer.Children[0];
-                var scaleAnimation = new Animation(140);
-
-                releaseImage.BackgroundColor = Color.White;
-                scaleAnimation.AnimateTo(releaseImage, "Opacity", 0.8f, _easeOut);
-                scaleAnimation.AnimateTo(releaseImage, "ScaleX", 1.0f, _easeOut);
-                scaleAnimation.AnimateTo(releaseImage, "ScaleY", 1.0f, _easeOut);
-                scaleAnimation.Play();
-                scaleAnimation.Finished += (a, ev) =>
-                {
-                    if (a is Animation ani) ani.Dispose();
-                };
-
-                var row = uint.Parse(releaseContainer.Name.Split("_")[1]);
-                _prewSelectedRow = row;
-            }
-        }
-
-        private bool ReleaseImageContainer_KeyEvent(object source, View.KeyEventArgs e)
-        {
-            return false;
+            if (sender is Poster poster) ScrollTo(poster.View);
         }
 
         private void ScrollTo(View focusedView)
         {
-            float dayContainerTop = focusedView.PositionY;
-            float dayContainerBottom = focusedView.PositionY + focusedView.SizeHeight;
+            float focusedViewTop = focusedView.PositionY;
+            float focusedViewBottom = focusedView.PositionY + focusedView.SizeHeight;
 
             float visibleRectangleTop = -_scheduleView.PositionY;
             float visibleRectangleBottom = -_scheduleView.PositionY + _mainPageView.SizeHeight;
 
-            if (dayContainerTop < visibleRectangleTop)
+            if (focusedViewTop < visibleRectangleTop)
             {
-                _scrollPosition += visibleRectangleTop - dayContainerTop + _fontSize + _posterHeight * 0.2f;
+                _scrollPosition += visibleRectangleTop - focusedViewTop + _fontSize;
                 AnimateTo(_scrollPosition);
             }
-            else if (dayContainerBottom > visibleRectangleBottom)
+            else if (focusedViewBottom > visibleRectangleBottom)
             {
-                _scrollPosition -= dayContainerBottom - visibleRectangleBottom + _posterHeight * 0.2f;
+                _scrollPosition -= focusedViewBottom - visibleRectangleBottom + _posterHeight * 0.2f;
                 AnimateTo(_scrollPosition);
             }
         }
