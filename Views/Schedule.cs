@@ -22,6 +22,7 @@ namespace AnilibriaAppTizen.Views
         private readonly int _animationDuration = 280;
 
         private View _scheduleView;
+        private View _scheduleViewScrollContainer;
         private WeekDay[] _weekDays;
 
         private Animation _scheduleScrollAnimation;
@@ -80,21 +81,32 @@ namespace AnilibriaAppTizen.Views
             {
                 loading.Remove();
             }
-            var rows = 20;
+
+            // Calc rows qty
+            var rows = 0;
+            foreach (var day in _weekDays)
+            {
+                rows += 1 + (int)Math.Ceiling((float)day.Releases.Count / _columns);
+            }
+
+            _scheduleViewScrollContainer = new View();
+            _mainPageView.Add(_scheduleViewScrollContainer);
+
+            var scheduleViewLayout = new GridLayout
+            {
+                Columns = _columns,
+                Rows = rows,
+                ColumnSpacing = 8,
+                RowSpacing = 8,
+                GridOrientation = GridLayout.Orientation.Horizontal,
+            };
             _scheduleView = new View()
             {
-                Layout = new GridLayout
-                {
-                    Columns = _columns,
-                    Rows = rows,
-                    ColumnSpacing = 8,
-                    RowSpacing = 8,
-                    GridOrientation = GridLayout.Orientation.Horizontal,
-                },
+                Layout = scheduleViewLayout,
                 PositionX = _mainPageView.SizeWidth * 0.01f,
             };
-            _mainPageView.Add(_scheduleView);
-            _scheduleView.RemovedFromWindow += ScheduleView_RemovedFromWindow;
+            _scheduleViewScrollContainer.Add(_scheduleView);
+            _scheduleViewScrollContainer.RemovedFromWindow += ScheduleView_RemovedFromWindow;
 
             var focusMatrixRow = 0;
             var focusMatrix = new View[rows, _columns];
@@ -119,7 +131,11 @@ namespace AnilibriaAppTizen.Views
                     FontFamily = "Roboto Thin",
                     Name = $"SheduleDayLabel_{row}",
                     VerticalAlignment = VerticalAlignment.Bottom,
-                    PositionY = day.IsFirst ? 0 : _posterHeight * 0.1f,
+                    PositionY = day.IsFirst
+                        ? _fontSize * 0.2f
+                        : _posterHeight * 0.1f + _fontSize * 0.1f,
+                    PositionX = -_posterWidth * 0.1f,
+                    Opacity = 0.6f,
                 };
                 dayLabelView.Add(dayLabel);
 
@@ -191,19 +207,19 @@ namespace AnilibriaAppTizen.Views
         private void ScrollTo(View focusedView)
         {
             float focusedViewTop = focusedView.PositionY;
-            float focusedViewBottom = focusedView.PositionY + focusedView.SizeHeight;
+            float focusedViewBottom = focusedView.PositionY + _posterHeight;
 
-            float visibleRectangleTop = -_scheduleView.PositionY;
-            float visibleRectangleBottom = -_scheduleView.PositionY + _mainPageView.SizeHeight;
+            float visibleRectangleTop = -_scheduleViewScrollContainer.PositionY + _fontSize;
+            float visibleRectangleBottom = -_scheduleViewScrollContainer.PositionY + _mainPageView.SizeHeight - _posterHeight * 0.2f;
 
             if (focusedViewTop < visibleRectangleTop)
             {
-                _scrollPosition += visibleRectangleTop - focusedViewTop + _fontSize;
+                _scrollPosition += visibleRectangleTop - focusedViewTop;
                 AnimateTo(_scrollPosition);
             }
             else if (focusedViewBottom > visibleRectangleBottom)
             {
-                _scrollPosition -= focusedViewBottom - visibleRectangleBottom + _posterHeight * 0.2f;
+                _scrollPosition -= focusedViewBottom - visibleRectangleBottom;
                 AnimateTo(_scrollPosition);
             }
         }
@@ -219,7 +235,7 @@ namespace AnilibriaAppTizen.Views
                 _scheduleScrollAnimation.Clear();
             }
             _scheduleScrollAnimation = new Animation(_animationDuration);
-            _scheduleScrollAnimation.AnimateTo(_scheduleView, "PositionY", destination, _easeOut);
+            _scheduleScrollAnimation.AnimateTo(_scheduleViewScrollContainer, "PositionY", destination);
             _scheduleScrollAnimation.Play();
         }
 
