@@ -1,6 +1,4 @@
 ﻿using AnilibriaAppTizen.Services;
-using System.Diagnostics;
-using System.Linq;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 
@@ -9,7 +7,6 @@ namespace AnilibriaAppTizen.Views
     internal class MainPage
     {
         private readonly int _titleHeight = 80;
-        private readonly int _fontSize = 52;
 
         #pragma warning disable CS0618
         private readonly int windowSizeWidth = Window.Instance.Size.Width;
@@ -23,13 +20,13 @@ namespace AnilibriaAppTizen.Views
         private readonly Schedule _schedule;
         private readonly Home _home;
         private readonly Settings _settings;
-        private readonly string _resPath;
 
         private View _view;
         private Menu _menu;
         private View _mainPageView;
         private View _mainTitleView;
         private TextLabel _title;
+        private TextLabel _subTitle;
         private Animation _opacityAnimation;
 
         public View View
@@ -51,15 +48,8 @@ namespace AnilibriaAppTizen.Views
             get { return _menu.ActiveButton; }
         }
 
-        public string SharedRes
+        public MainPage(ApiService apiService, ImageService imageService, Release releaseView)
         {
-            get { return _resPath; }
-        }
-
-
-        public MainPage(string resPath, ApiService apiService, ImageService imageService, Release releaseView)
-        {
-            _resPath = resPath;
             _apiService = apiService;
             _imageService = imageService;
             _release = releaseView;
@@ -94,22 +84,34 @@ namespace AnilibriaAppTizen.Views
                 SizeHeight = _titleHeight,
                 SizeWidth = windowSizeWidth - _menu.CollapsedWidth,
                 PositionX = _menu.CollapsedWidth,
-                Name = "Main title view"
+                Name = "Main title view",
             };
             _view.Add(_mainTitleView);
-
+            
             _title = new TextLabel
             {
                 Text = "",
                 TextColor = new Color(255, 255, 255, 0.5f),
-                PixelSize = _fontSize,
-                Padding = new Extents(25, 0, 0, 0),
+                PointSize = 48,
                 FontFamily = "Roboto Light",
                 Name = "Main title label",
-                Size = _mainTitleView.Size,
-                VerticalAlignment = VerticalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Bottom,
+                SizeHeight = _mainTitleView.SizeHeight,
+                PositionX = 50
             };
             _mainTitleView.Add(_title);
+
+            _subTitle = new TextLabel
+            {
+                Text = "",
+                TextColor = new Color(255, 255, 255, 0.5f),
+                PointSize = 24,
+                FontFamily = "Roboto Light",
+                Name = "Main subtitle label",
+                VerticalAlignment = VerticalAlignment.Bottom,
+                SizeHeight = _mainTitleView.SizeHeight - 6,
+            };
+            _mainTitleView.Add(_subTitle);
 
             Window.Instance.Add(_view);
         }
@@ -141,10 +143,12 @@ namespace AnilibriaAppTizen.Views
             }
         }
 
-        public void SetTitle(string title)
+        public void SetTitle(string title, string subTitle = "", float subTitlePositionX = 0)
         {
             _mainTitleView.Opacity = 0;
             _title.Text = title;
+            _subTitle.PositionX = subTitlePositionX;
+            _subTitle.Text = subTitle;
             AnimateOpacityTo(1, _mainTitleView);
         }
 
