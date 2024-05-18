@@ -17,6 +17,7 @@ namespace AnilibriaAppTizen.Views
         private string _key = string.Empty;
 
         private VisualView _icon;
+        private TextLabel _textLabel;
         private SVGVisual _iconVisual;
         private readonly Menu _menu;
 
@@ -57,16 +58,14 @@ namespace AnilibriaAppTizen.Views
 
             _btn = new View
             {
-                Focusable = Key != "logo",
+                Focusable = true,
                 SizeHeight = _menu.CollapsedWidth,
                 SizeWidth = _menu.CollapsedWidth,
                 Name = "MenuButton-" + _key,
-                Opacity = Key != "logo" ? 0.5f : 1,
             };
 
             _icon = new VisualView()
             {
-                Opacity = 0.8f,
                 Size = new Size2D(_iconSize, _iconSize),
                 PositionX = (_menu.CollapsedWidth - _iconSize) / 2,
                 PositionY = (_menu.CollapsedWidth - _iconSize) / 2,
@@ -79,17 +78,18 @@ namespace AnilibriaAppTizen.Views
             };
             _icon.AddVisual($"{_key}-icon", _iconVisual);
 
-            TextLabel label = new TextLabel
+            _textLabel = new TextLabel
             {
                 Text = _text,
                 FontFamily = _key == "logo" ? "Roboto Thin" : "Roboto Light",
-                PixelSize = _key == "logo" ? 32 : 24,
+                PixelSize = _key == "logo" ? 38 : 24,
                 TextColor = Color.White,
                 PositionX = _menu.CollapsedWidth,
                 SizeHeight = _menu.CollapsedWidth,
                 VerticalAlignment = VerticalAlignment.Center,
+                Opacity = _key == "logo" ? 1 : 0.6f,
             };
-            _btn.Add(label);
+            _btn.Add(_textLabel);
 
             _btn.FocusGained += (obj, e) =>
             {
@@ -105,9 +105,6 @@ namespace AnilibriaAppTizen.Views
             _btn.LeftFocusableView = null;
 
             _menu.ActiveButtonChanged += Menu_ActiveButtonChanged;
-
-            if (_key == "settings")
-                FlexLayout.SetFlexAlignmentSelf(_btn, FlexLayout.AlignmentType.FlexEnd);
         }
 
         private void Menu_ActiveButtonChanged(object sender, EventArgs e)
@@ -120,7 +117,7 @@ namespace AnilibriaAppTizen.Views
             else if (_iconVisual.URL == _activeIconUrl)
             {
                 _iconVisual.URL = _iconUrl;
-                AnimateOpacityTo(0.8f);
+                AnimateOpacityTo(0.6f);
             }
         }
 
@@ -137,7 +134,7 @@ namespace AnilibriaAppTizen.Views
         private void AnimateOpacityTo(float destination)
         {
             var animation = new Animation(140);
-            animation.AnimateTo(_btn, "Opacity", destination);
+            animation.AnimateTo(_textLabel, "Opacity", destination);
             animation.Play();
             animation.Finished += (a, ev) =>
             {
@@ -148,8 +145,8 @@ namespace AnilibriaAppTizen.Views
         private void AnimateIconScaleTo(float destination)
         {
             var animation = new Animation(140);
-            animation.AnimateTo(_btn, "ScaleX", destination);
-            animation.AnimateTo(_btn, "ScaleY", destination);
+            animation.AnimateTo(_icon, "ScaleX", destination);
+            animation.AnimateTo(_icon, "ScaleY", destination);
             animation.Play();
             animation.Finished += (a, ev) =>
             {

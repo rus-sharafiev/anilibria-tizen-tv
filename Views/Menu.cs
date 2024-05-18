@@ -8,8 +8,8 @@ namespace AnilibriaAppTizen.Views
 {
     internal class Menu
     {
-        private readonly int _collapsedWidth = 80;
-        private readonly int _expandedWidth = 280;
+        private readonly int _collapsedWidth = 70;
+        private readonly int _expandedWidth = 260;
 
         #pragma warning disable CS0618
         readonly int windowSizeHeight = Window.Instance.Size.Height;
@@ -46,11 +46,6 @@ namespace AnilibriaAppTizen.Views
             get { return _expandedWidth; }
         }
 
-        public string SharedRes
-        {
-            get { return _mainPage.SharedRes; }
-        }
-
         public Menu(MainPage mainPage)
         {
             _mainPage = mainPage;
@@ -59,10 +54,9 @@ namespace AnilibriaAppTizen.Views
 
         private readonly Button[] menuItems =
         {
-            new Button() {Key = "logo", Name = "Anilibria"},
-            new Button() {Key = "home", Name = "Главная"},
-            new Button() {Key = "schedule", Name = "Расписание"},
-            new Button() {Key = "settings", Name = "Настройки"},
+            new Button() {Key = "home", Name = "Главная", Position = "top"},
+            new Button() {Key = "schedule", Name = "Расписание", Position = "top"},
+            new Button() {Key = "settings", Name = "Настройки", Position = "bottom"},
         };
 
         public void RenderTo(View view)
@@ -72,14 +66,43 @@ namespace AnilibriaAppTizen.Views
                 Layout = new FlexLayout
                 {
                     Direction = FlexLayout.FlexDirection.Column,
+                    Justification = FlexLayout.FlexJustification.SpaceBetween,
                 },
                 SizeWidth = _collapsedWidth,
                 SizeHeight = windowSizeHeight,
                 Name = "Menu",
-                Focusable = false,
-                ClippingMode = ClippingModeType.ClipChildren
+                ClippingMode = ClippingModeType.ClipChildren,
             };
             view.Add(_menuView);
+
+            var logo = new MenuButton(this)
+            {
+                Text = "Anilibria",
+                Key = "logo",
+            };
+            logo.View.Focusable = false;
+            _menuView.Add(logo.View);
+            FlexLayout.SetFlexPositionType(logo.View, FlexLayout.PositionType.Absolute);
+
+            var topView = new View
+            {
+                Layout = new FlexLayout
+                {
+                    Direction = FlexLayout.FlexDirection.Column,
+                },
+                SizeHeight= _collapsedWidth * 1.5f,
+                Padding = new Extents(0, 0, (ushort)(_collapsedWidth * 1.5f), 0),
+            };
+            _menuView.Add(topView);
+
+            var bottomView = new View
+            {
+                Layout = new FlexLayout
+                {
+                    Direction = FlexLayout.FlexDirection.Column,
+                },
+            };
+            _menuView.Add(bottomView);
 
             _btnViews = new List<View>();
             foreach (var btn in menuItems)
@@ -89,17 +112,25 @@ namespace AnilibriaAppTizen.Views
                     Text = btn.Name,
                     Key = btn.Key,
                 };
-                _menuView.Add(menuBtn.View);
                 menuBtn.FocusGained += MenuBtn_FocusGained;
+
+                if (btn.Position == "top")
+                {
+                    topView.Add(menuBtn.View);
+                    topView.SizeHeight += _collapsedWidth;
+                }
+                else
+                {
+                    bottomView.Add(menuBtn.View);
+                    bottomView.SizeHeight += _collapsedWidth;
+                }
 
                 if (btn.Key == "home")
                 {
                     _activeBtn = menuBtn;
                     ActiveButtonChanged?.Invoke(this, EventArgs.Empty);
                 }
-
-                if (btn.Key != "logo")
-                    _btnViews.Add(menuBtn.View);
+                _btnViews.Add(menuBtn.View);
             }
 
             for (int j = 0; j < _btnViews.Count; j++)
@@ -164,5 +195,6 @@ namespace AnilibriaAppTizen.Views
     {
         public string Key { get; set; }
         public string Name { get; set; }
+        public string Position { get; set; }
     }
 }
