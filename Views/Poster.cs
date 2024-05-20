@@ -9,7 +9,6 @@ namespace AnilibriaAppTizen.Views
     internal class Poster
     {
         private readonly Size _posterSize;
-        private int _depthIndex;
 
         private VisualView _posterView;
         private ColorVisual _colorVisual;
@@ -34,11 +33,6 @@ namespace AnilibriaAppTizen.Views
             get { return _posterUrl; }
         }
 
-        public int DepthIndex
-        {
-            set { _depthIndex = value; }
-        }
-
         public Poster(string posterUrl, Size posterSize)
         {
             _posterUrl = posterUrl;
@@ -52,37 +46,29 @@ namespace AnilibriaAppTizen.Views
         {
             _posterView = new VisualView()
             {
-                Opacity = 0.8f,
                 Size = _posterSize,
                 Focusable = true,
+                Opacity = 0.7f
             };
             _posterView.FocusGained += PosterView_FocusGained;
             _posterView.FocusLost += PosterView_FocusLost;
-
-            _colorVisual = new ColorVisual
-            {
-                Color = new Color(255, 255, 255, 1),
-            };
-            _posterView.AddVisual("Color" + _posterUrl, _colorVisual);
 
             _imageVisual = new ImageVisual
             {
                 URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg", // _posterUrl,
                 FittingMode = FittingModeType.ScaleToFill,
                 AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/alphaMask.png",
-                //DesiredHeight = (int)(_posterView.SizeHeight * 2.0f),
-                //DesiredWidth = (int)(_posterView.SizeWidth * 2.0f),
-                //PremultipliedAlpha = true,
-                DepthIndex = _depthIndex,
+                //DesiredHeight = 500,
+                //DesiredWidth = 350,
             };
             _posterView.AddVisual(_posterUrl, _imageVisual);
         }
 
         private void PosterView_FocusGained(object sender, System.EventArgs e)
         {
-            _imageVisual.DepthIndex = 10;
-            var scaleAnimation = new Animation(140);
+            _posterView.DrawMode = DrawModeType.Overlay2D;
 
+            var scaleAnimation = new Animation(140);
             scaleAnimation.AnimateTo(_posterView, "Opacity", 1.0f, _easeOut);
             scaleAnimation.AnimateTo(_posterView, "ScaleX", 1.2f, _easeOut);
             scaleAnimation.AnimateTo(_posterView, "ScaleY", 1.2f, _easeOut);
@@ -97,11 +83,10 @@ namespace AnilibriaAppTizen.Views
 
         private void PosterView_FocusLost(object sender, System.EventArgs e)
         {
-            _imageVisual.DepthIndex = 0;
+            _posterView.DrawMode = DrawModeType.Normal;
 
             var scaleAnimation = new Animation(140);
-
-            scaleAnimation.AnimateTo(_posterView, "Opacity", 0.8f, _easeOut);
+            scaleAnimation.AnimateTo(_posterView, "Opacity", 0.7f, _easeOut);
             scaleAnimation.AnimateTo(_posterView, "ScaleX", 1.0f, _easeOut);
             scaleAnimation.AnimateTo(_posterView, "ScaleY", 1.0f, _easeOut);
             scaleAnimation.Play();
