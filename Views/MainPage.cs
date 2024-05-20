@@ -1,4 +1,5 @@
 ﻿using AnilibriaAppTizen.Services;
+using System.Diagnostics;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 
@@ -15,11 +16,14 @@ namespace AnilibriaAppTizen.Views
 
         private readonly ApiService _apiService;
         private readonly ImageService _imageService;
+        private readonly UserService _userService;
 
-        private readonly Release _release;
-        private readonly Schedule _schedule;
         private readonly Home _home;
+        private readonly Schedule _schedule;
+        private readonly Search _search;
+        private readonly Account _account;
         private readonly Settings _settings;
+        private readonly Release _release;
 
         private View _view;
         private Menu _menu;
@@ -48,14 +52,18 @@ namespace AnilibriaAppTizen.Views
             get { return _menu.ActiveButton; }
         }
 
-        public MainPage(ApiService apiService, ImageService imageService, Release releaseView)
+        public MainPage(ApiService apiService, ImageService imageService, UserService userService, Release releaseView)
         {
             _apiService = apiService;
             _imageService = imageService;
+            _userService = userService;
             _release = releaseView;
 
-            _schedule = new Schedule(apiService, imageService);
+            _menu = new Menu(this, userService);
             _home = new Home(apiService, imageService);
+            _schedule = new Schedule(apiService, imageService);
+            _search = new Search(apiService, imageService);
+            _account = new Account(userService);
             _settings = new Settings(apiService, imageService);
         }
 
@@ -63,7 +71,6 @@ namespace AnilibriaAppTizen.Views
         {
             _view = new View();
 
-            _menu = new Menu(this);
             _menu.RenderTo(_view);
             _menu.ActiveButtonChanged += Menu_ActiveButtonChanged;
 
@@ -114,10 +121,13 @@ namespace AnilibriaAppTizen.Views
             _mainTitleView.Add(_subTitle);
 
             Window.Instance.Add(_view);
+            _schedule.RenderTo(this, _release);
         }
 
         private void Menu_ActiveButtonChanged(object sender, System.EventArgs e)
         {
+
+            Debug.WriteLine($"{_menu.ActiveButton.Key}");
             switch (_menu.ActiveButton.Key)
             {
                 case "home":
@@ -133,6 +143,21 @@ namespace AnilibriaAppTizen.Views
                         _schedule.RenderTo(this, _release);
                     }
                     break;
+
+                case "search":
+                    if (!_search.IsActive)
+                    {
+                        _search.RenderTo(this, _release);
+                    }
+                    break;
+
+                case "account":
+                    if (!_account.IsActive)
+                    {
+                        _account.RenderTo(this);
+                    }
+                    break;
+
 
                 case "settings":
                     if (!_settings.IsActive)

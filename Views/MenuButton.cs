@@ -46,6 +46,15 @@ namespace AnilibriaAppTizen.Views
             get { return _icon; }
         }
 
+        public string IconURL
+        {
+            get { return _iconUrl; }
+            set { 
+                _iconUrl = _sharedRes + "icons/" + value + ".svg";
+                _activeIconUrl = _sharedRes + "icons/" + value + "_filled.svg";
+            }
+        }
+
         public MenuButton(Menu menu) 
         { 
             _menu = menu;
@@ -82,7 +91,7 @@ namespace AnilibriaAppTizen.Views
             {
                 Text = _text,
                 FontFamily = _key == "logo" ? "Roboto Thin" : "Roboto Light",
-                PixelSize = _key == "logo" ? 38 : 24,
+                PointSize = _key == "logo" ? 38 : 24,
                 TextColor = Color.White,
                 PositionX = _menu.CollapsedWidth,
                 SizeHeight = _menu.CollapsedWidth,

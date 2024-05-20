@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Tizen.NUI.BaseComponents;
 using Tizen.NUI;
 using System.Diagnostics;
+using AnilibriaAppTizen.Services;
 
 namespace AnilibriaAppTizen.Views
 {
@@ -10,6 +11,8 @@ namespace AnilibriaAppTizen.Views
     {
         private readonly int _collapsedWidth = 70;
         private readonly int _expandedWidth = 260;
+
+        private readonly UserService _userService;
 
         #pragma warning disable CS0618
         readonly int windowSizeHeight = Window.Instance.Size.Height;
@@ -20,6 +23,7 @@ namespace AnilibriaAppTizen.Views
 
         private View _menuView;
         private Animation _animation;
+        private MenuButton _accountBtn;
 
         private MenuButton _activeBtn;
         private List<View> _btnViews;
@@ -29,6 +33,12 @@ namespace AnilibriaAppTizen.Views
         public MenuButton ActiveButton
         {
             get { return _activeBtn; }
+        }
+
+        public MenuButton AccountBtn
+        {
+            get { return _accountBtn; }
+            set { _accountBtn = value; }
         }
 
         public View View
@@ -46,16 +56,21 @@ namespace AnilibriaAppTizen.Views
             get { return _expandedWidth; }
         }
 
-        public Menu(MainPage mainPage)
+        public Menu(MainPage mainPage, UserService userService)
         {
             _mainPage = mainPage;
+            _userService = userService;
             _easeOut =  new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
+
+            _userService.UserChanged += UserService_UserChanged;
         }
 
         private readonly Button[] menuItems =
         {
             new Button() {Key = "home", Name = "Главная", Position = "top"},
             new Button() {Key = "schedule", Name = "Расписание", Position = "top"},
+            new Button() {Key = "search", Name = "Поиск", Position = "top"},
+            new Button() {Key = "account", Name = "Войти", Position = "bottom"},
             new Button() {Key = "settings", Name = "Настройки", Position = "bottom"},
         };
 
@@ -125,7 +140,10 @@ namespace AnilibriaAppTizen.Views
                     bottomView.SizeHeight += _collapsedWidth;
                 }
 
-                if (btn.Key == "home")
+                if (btn.Key == "account")
+                    _accountBtn = menuBtn;
+
+                if (btn.Key == "schedule")
                 {
                     _activeBtn = menuBtn;
                     ActiveButtonChanged?.Invoke(this, EventArgs.Empty);
@@ -188,6 +206,21 @@ namespace AnilibriaAppTizen.Views
             _animation.AnimateTo(_mainPage.View, "PositionX", destination, _easeOut);
             _animation.AnimateTo(_mainPage.TitleView, "PositionX", destination, _easeOut);
             _animation.Play();
+        }
+
+        private void UserService_UserChanged(object sender, EventArgs e)
+        {
+            if (sender is UserService userService)
+                if (userService.User != null)
+                {
+                    _accountBtn.IconURL = "user";
+                    _accountBtn.Text = "Аккаунт";
+                }
+                else
+                {
+                    _accountBtn.IconURL = "account";
+                    _accountBtn.Text = "Войти";
+                }
         }
     }
 
