@@ -1,7 +1,6 @@
 ﻿using AnilibriaAppTizen.Models;
 using AnilibriaAppTizen.Services;
 using System;
-using System.Diagnostics;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 
@@ -29,7 +28,6 @@ namespace AnilibriaAppTizen.Views
         private readonly AlphaFunction _easeOut;
         private float _scrollPosition;
 
-        private uint _prewSelectedRow;
         private bool _isActive = false;
 
         float _posterWidth;
@@ -134,8 +132,8 @@ namespace AnilibriaAppTizen.Views
                     PositionY = day.IsFirst
                         ? _fontSize * 0.2f
                         : _posterHeight * 0.1f + _fontSize * 0.1f,
-                    PositionX = -_posterWidth * 0.1f,
-                    Opacity = 0.6f,
+                    PositionX = _posterWidth * 0.1f,
+                    Opacity = 0.5f,
                 };
                 dayLabelView.Add(dayLabel);
 
@@ -182,10 +180,10 @@ namespace AnilibriaAppTizen.Views
                     if (focusMatrix[r, c] != null)
                     {
                         if (r > 0)
-                            focusMatrix[r, c].UpFocusableView = focusMatrix[r - 1, c];
+                            focusMatrix[r, c].UpFocusableView = GetClothestView(focusMatrix, r - 1, c);
 
                         if (r < focusMatrix.GetLength(0) - 1)
-                            focusMatrix[r, c].DownFocusableView = focusMatrix[r + 1, c];
+                            focusMatrix[r, c].DownFocusableView = GetClothestView(focusMatrix, r + 1, c);
 
                         if (c > 0)
                             focusMatrix[r, c].LeftFocusableView = focusMatrix[r, c - 1];
@@ -197,6 +195,22 @@ namespace AnilibriaAppTizen.Views
                     }
 
             mainPage.ActiveMenuButton.View.RightFocusableView = _lastFocusedView;
+        }
+
+        private View GetClothestView(View[,] focusMatrix, int r, int c)
+        {
+            if (focusMatrix[r, c] != null)
+                return focusMatrix[r, c];
+            else if (c > 0)
+                for (int i = c - 1; i > 0; i--)
+                {
+                    if (focusMatrix[r, i] != null)
+                    {
+                        return focusMatrix[r, i];
+                    }
+                }
+
+            return null;
         }
 
         private void ReleasePoster_FocusGained(object sender, EventArgs e)
@@ -237,14 +251,6 @@ namespace AnilibriaAppTizen.Views
             _scheduleScrollAnimation = new Animation(_animationDuration);
             _scheduleScrollAnimation.AnimateTo(_scheduleViewScrollContainer, "PositionY", destination);
             _scheduleScrollAnimation.Play();
-        }
-
-        public void UnloadPage()
-        {
-            if (_scheduleView != null)
-            {
-                _scheduleView.Unparent();
-            }
         }
 
         private void ScheduleView_RemovedFromWindow(object sender, EventArgs e)
