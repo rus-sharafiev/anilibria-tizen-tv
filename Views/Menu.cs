@@ -10,7 +10,7 @@ namespace AnilibriaAppTizen.Views
     internal class Menu
     {
         private readonly int _collapsedWidth = 70;
-        private readonly int _expandedWidth = 260;
+        private readonly int _expandedWidth = 230;
 
         private readonly UserService _userService;
 
@@ -86,7 +86,7 @@ namespace AnilibriaAppTizen.Views
                 SizeWidth = _collapsedWidth,
                 SizeHeight = windowSizeHeight,
                 Name = "Menu",
-                ClippingMode = ClippingModeType.ClipChildren,
+                ClippingMode = ClippingModeType.ClipChildren
             };
             view.Add(_menuView);
 

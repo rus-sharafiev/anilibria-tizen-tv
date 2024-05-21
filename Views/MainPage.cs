@@ -14,10 +14,6 @@ namespace AnilibriaAppTizen.Views
         private readonly int windowSizeHeight = Window.Instance.Size.Height;
         #pragma warning restore CS0618
 
-        private readonly ApiService _apiService;
-        private readonly ImageService _imageService;
-        private readonly UserService _userService;
-
         private readonly Home _home;
         private readonly Schedule _schedule;
         private readonly Search _search;
@@ -31,7 +27,16 @@ namespace AnilibriaAppTizen.Views
         private View _mainTitleView;
         private TextLabel _title;
         private TextLabel _subTitle;
-        private Animation _opacityAnimation;
+
+        private readonly int _columns = 10;
+        private readonly int _posterSpacing = 8;
+        private float _posterWidth;
+        private float _posterHeight;
+
+        public int Columns { get { return _columns; } }
+        public int PosterSpacing { get { return _posterSpacing; } }
+        public float PosterWidth { get { return _posterWidth; } }
+        public float PosterHeight { get { return _posterHeight; } }
 
         public View View
         {
@@ -54,9 +59,6 @@ namespace AnilibriaAppTizen.Views
 
         public MainPage(ApiService apiService, ImageService imageService, UserService userService, Release releaseView)
         {
-            _apiService = apiService;
-            _imageService = imageService;
-            _userService = userService;
             _release = releaseView;
 
             _menu = new Menu(this, userService);
@@ -85,6 +87,9 @@ namespace AnilibriaAppTizen.Views
             };
             _view.Add(_mainPageView);
             _mainPageView.ChildAdded += MainView_ChildAdded;
+
+            _posterWidth = (_mainPageView.SizeWidth - (_columns + 1) * _posterSpacing) / (0.2f + _columns);
+            _posterHeight = _posterWidth * 500 / 350;
 
             _mainTitleView = new View
             {

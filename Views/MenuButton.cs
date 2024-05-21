@@ -102,12 +102,10 @@ namespace AnilibriaAppTizen.Views
 
             _btn.FocusGained += (obj, e) =>
             {
-                AnimateIconScaleTo(1.2f);
                 FocusGained.Invoke(this, EventArgs.Empty);
             };
             _btn.FocusLost += (obj, e) =>
             {
-                AnimateIconScaleTo(1);
                 FocusLost?.Invoke(this, EventArgs.Empty);
             };
             _btn.RightFocusableView = null; 
@@ -144,18 +142,6 @@ namespace AnilibriaAppTizen.Views
         {
             var animation = new Animation(140);
             animation.AnimateTo(_textLabel, "Opacity", destination);
-            animation.Play();
-            animation.Finished += (a, ev) =>
-            {
-                if (a is Animation ani) ani.Dispose();
-            };
-        }
-
-        private void AnimateIconScaleTo(float destination)
-        {
-            var animation = new Animation(140);
-            animation.AnimateTo(_icon, "ScaleX", destination);
-            animation.AnimateTo(_icon, "ScaleY", destination);
             animation.Play();
             animation.Finished += (a, ev) =>
             {
