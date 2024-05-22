@@ -31,13 +31,13 @@ namespace AnilibriaAppTizen
             // Create services
             _apiService = new ApiService();
             _fileService = new FileService();
-            _imageService = new ImageService(DirectoryInfo.Data);
-            _localSettingsService = new LocalSettingsService(_fileService, DirectoryInfo.Data);
+            _imageService = new ImageService();
+            _localSettingsService = new LocalSettingsService(_fileService);
             _userService = new UserService(_localSettingsService, _apiService);
 
             // Views
             _release = new Release(_apiService);
-            _mainPage = new MainPage(DirectoryInfo.SharedResource, _apiService, _imageService, _release);
+            _mainPage = new MainPage(_apiService, _imageService, _userService, _release);
 
             // Init user session
             await _userService.InitializeAsync();
@@ -60,7 +60,10 @@ namespace AnilibriaAppTizen
         {
             if (e.Key.State == Key.StateType.Down && (e.Key.KeyPressedName == "Escape" || e.Key.KeyPressedName == "XF86Back"))
             {
-                Exit();
+                if (_release.IsActive)
+                    _release.Dispose();
+                else
+                    Exit();
             }
 
         }
@@ -70,7 +73,6 @@ namespace AnilibriaAppTizen
         /// </summary>
         /// <param name="sender">FocusManager instance</param>
         /// <param name="e">FocusManager's args</param>
-
         private void FocusManager_FocusChanged(object sender, FocusManager.FocusChangedEventArgs e)
         {
             if (e.NextView != null)

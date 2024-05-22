@@ -10,13 +10,18 @@ namespace AnilibriaAppTizen.Views
     {
         private readonly Size _posterSize;
 
+        private readonly View _mainPageView;
+        private readonly Release _releasePage;
         private VisualView _posterView;
-        private ColorVisual _colorVisual;
         private ImageVisual _imageVisual;
+        private readonly Models.Release _releaseData;
         private readonly string _posterUrl;
         private readonly AlphaFunction _easeOut;
 
+        private View _parentContainer;
+
         public event EventHandler FocusGained;
+        public event EventHandler Activated;
 
         public VisualView View 
         {
@@ -33,14 +38,23 @@ namespace AnilibriaAppTizen.Views
             get { return _posterUrl; }
         }
 
-        public Poster(string posterUrl, Size posterSize)
+        public View ParentContainer
         {
+            set { _parentContainer = value; }
+        }
+
+        public Poster(string posterUrl, MainPage mainPage, Models.Release releaseData)
+        {
+            _mainPageView = mainPage.View;
             _posterUrl = posterUrl;
-            _posterSize = posterSize;
+            _releasePage = mainPage.ReleasePage;
+            _releaseData = releaseData;
+            _posterSize = new Size(mainPage.PosterWidth, mainPage.PosterHeight);
             _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
 
             Initialize();
         }
+
 
         public void Initialize()
         {
@@ -52,16 +66,30 @@ namespace AnilibriaAppTizen.Views
             };
             _posterView.FocusGained += PosterView_FocusGained;
             _posterView.FocusLost += PosterView_FocusLost;
+            _posterView.KeyEvent += PosterView_KeyEvent;
 
             _imageVisual = new ImageVisual
             {
                 URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg", // _posterUrl,
                 FittingMode = FittingModeType.ScaleToFill,
                 AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/alphaMask.png",
-                //DesiredHeight = 500,
-                //DesiredWidth = 350,
+                DesiredHeight = 500,
+                DesiredWidth = 350,
             };
             _posterView.AddVisual(_posterUrl, _imageVisual);
+        }
+
+        private bool PosterView_KeyEvent(object source, View.KeyEventArgs e)
+        {
+            if (e.Key.State == Key.StateType.Down && e.Key.KeyPressedName == "Return")
+            {
+                var posX = _posterView.PositionX + _parentContainer.PositionX + _mainPageView.PositionX - _posterView.SizeWidth * 0.1f;
+                var posY = _posterView.PositionY + _parentContainer.PositionY + _mainPageView.PositionY - _posterView.SizeHeight * 0.1f;
+
+                _releasePage.Render(_posterView, new Position(posX, posY), _releaseData);
+                Activated?.Invoke(this, new EventArgs());
+            }
+            return false;
         }
 
         private void PosterView_FocusGained(object sender, System.EventArgs e)

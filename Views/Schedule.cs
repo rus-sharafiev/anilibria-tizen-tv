@@ -94,7 +94,10 @@ namespace AnilibriaAppTizen.Views
                 rows += 1 + (int)Math.Ceiling((float)day.Releases.Count / _columns);
             }
 
-            _scheduleViewScrollContainer = new View();
+            _scheduleViewScrollContainer = new View
+            {
+                PositionX = _posterWidth * 0.1f + _posterSpacing,
+            };
             _mainPageView.Add(_scheduleViewScrollContainer);
 
             var scheduleViewLayout = new GridLayout
@@ -108,7 +111,6 @@ namespace AnilibriaAppTizen.Views
             _scheduleView = new View()
             {
                 Layout = scheduleViewLayout,
-                PositionX = _posterWidth * 0.1f + _posterSpacing,
             };
             _scheduleViewScrollContainer.Add(_scheduleView);
             _scheduleViewScrollContainer.RemovedFromWindow += ScheduleView_RemovedFromWindow;
@@ -150,9 +152,10 @@ namespace AnilibriaAppTizen.Views
                 foreach (var dayRelease in day.Releases)
                 {
                     var url = "https://anilibria.top" + dayRelease.Poster.Src;
-                    var releasePoster = new Poster(url, _posterSize, dayRelease);
+                    var releasePoster = new Poster(url, mainPage, dayRelease);
                     releasePoster.View.Name = $"ScheduleRelease_{row}_{column}";
                     releasePoster.FocusGained += ReleasePoster_FocusGained;
+                    releasePoster.ParentContainer = _scheduleViewScrollContainer;
 
                     _scheduleView.Add(releasePoster.View);
                     GridLayout.SetColumn(releasePoster.View, column);

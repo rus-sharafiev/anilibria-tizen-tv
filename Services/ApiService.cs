@@ -50,6 +50,14 @@ namespace AnilibriaAppTizen.Services
             return response;
         }
 
+        public async Task<Release> GetReleaseAsync(int releaseId)
+        {
+            var response = await _instance.GetAsync<Release>( $"{_apiUrl}/anime/releases/{releaseId}");
+
+            await Task.CompletedTask;
+            return response;
+        }
+
         public CookieCollection GetCookies() =>
             _instance.GetCookieCollection().GetCookies(new Uri("https://wwnd.space"));
 

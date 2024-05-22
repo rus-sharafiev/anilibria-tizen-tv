@@ -14,6 +14,7 @@ namespace AnilibriaAppTizen.Views
         private readonly int windowSizeHeight = Window.Instance.Size.Height;
         #pragma warning restore CS0618
 
+        private readonly Menu _menu;
         private readonly Home _home;
         private readonly Schedule _schedule;
         private readonly Search _search;
@@ -22,7 +23,6 @@ namespace AnilibriaAppTizen.Views
         private readonly Release _release;
 
         private View _view;
-        private Menu _menu;
         private View _mainPageView;
         private View _mainTitleView;
         private TextLabel _title;
@@ -52,14 +52,19 @@ namespace AnilibriaAppTizen.Views
             get { return _menu; }
         }
 
+        public Release ReleasePage
+        {
+            get { return _release; }
+        }
+
         public MenuButton ActiveMenuButton
         {
             get { return _menu.ActiveButton; }
         }
 
-        public MainPage(ApiService apiService, ImageService imageService, UserService userService, Release releaseView)
+        public MainPage(ApiService apiService, ImageService imageService, UserService userService, Release releasePage)
         {
-            _release = releaseView;
+            _release = releasePage;
 
             _menu = new Menu(this, userService);
             _home = new Home(apiService, imageService);
