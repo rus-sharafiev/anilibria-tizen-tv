@@ -5,9 +5,9 @@ namespace AnilibriaAppTizen.Models
 {
     public partial class Release
     {
-        public long Id { get; set; }
+        public int Id { get; set; }
         public ValueDescription Type { get; set; }
-        public long Year { get; set; }
+        public int Year { get; set; }
         public Name Name { get; set; }
         public string Alias { get; set; }
         public ValueDescription Season { get; set; }
@@ -27,7 +27,7 @@ namespace AnilibriaAppTizen.Models
         public string Description { get; set; }
         public string Notification { get; set; }
         [JsonPropertyName("episodes_total")]
-        public long? EpisodesTotal { get; set; }
+        public int? EpisodesTotal { get; set; }
         [JsonPropertyName("external_player")]
         public string ExternalPlayer { get; set; }
         [JsonPropertyName("is_in_production")]
@@ -39,9 +39,9 @@ namespace AnilibriaAppTizen.Models
         [JsonPropertyName("is_blocked_by_copyrights")]
         public bool IsBlockedByCopyrights { get; set; }
         [JsonPropertyName("added_in_users_favorites")]
-        public long AddedInUsersFavorites { get; set; }
+        public int? AddedInUsersFavorites { get; set; }
         [JsonPropertyName("average_duration_of_episode")]
-        public long? AverageDurationOfEpisode { get; set; }
+        public int? AverageDurationOfEpisode { get; set; }
         public Genre[] Genres { get; set; }
         public Member[] Members { get; set; }
         public Sponsor Sponsor { get; set; }
