@@ -1,6 +1,7 @@
 ﻿using AnilibriaAppTizen.Services;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Tizen.Applications;
@@ -31,6 +32,7 @@ namespace AnilibriaAppTizen.Views
         private Position _posterStartPosition;
         private Size _posterStartSize;
         private View _originalPosterView;
+        private ScrollContainer _episodesScrollContainer;
         private Animation _animation;
 
         public bool IsActive { get { return _isActive; } }
@@ -73,7 +75,7 @@ namespace AnilibriaAppTizen.Views
                 URL = await _imageService.GetPath(release.Poster.Src),
                 //URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg",
                 FittingMode = FittingModeType.ScaleToFill,
-                AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/alphaMask.png",
+                AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/posterAlphaMask.png",
                 DesiredHeight = 500,
                 DesiredWidth = 350,
             };
@@ -227,9 +229,9 @@ namespace AnilibriaAppTizen.Views
             var descriptionText = new TextLabel
             {
                 Text = release.Description,
-                TextColor = new Color(255, 255, 255, 1f),
-                FontFamily = "Roboto Thin",
-                PointSize = 24,
+                TextColor = new Color(1, 1, 1, 0.8f),
+                FontFamily = "Roboto Light",
+                PointSize = 22,
                 MultiLine = true,
                 SizeWidth = releaseInfo.SizeWidth
             };
@@ -283,17 +285,65 @@ namespace AnilibriaAppTizen.Views
                     SizeHeight = 2,
                     SizeWidth = episodesSectionTitle.SizeWidth,
                     PositionY = episodesSectionTitle.SizeHeight,
-                    BackgroundColor = new Color(255, 255, 255, 0.2f),
+                    BackgroundColor = new Color(1, 1, 1, 0.2f),
                 };
                 episodesSection.Add(episodesSectionDivider);
 
-                var episodesScrollContainer = new View
+                var episodesView = new View
                 {
                     SizeHeight = episodesSection.SizeHeight - episodesSectionTitle.SizeHeight - episodesSectionDivider.SizeHeight,
                     SizeWidth = episodesSection.SizeWidth,
                     PositionY = episodesSectionTitle.SizeHeight,
                 };
-                episodesSection.Add(episodesScrollContainer);
+                episodesSection.Add(episodesView);
+
+                _episodesScrollContainer = new ScrollContainer
+                {
+                    TopScrollIndentation = _layoutPadding,
+                    BottomScrollIndentation = _layoutPadding,
+                };
+                episodesView.Add(_episodesScrollContainer.View);
+                _episodesScrollContainer.View.PositionY = _layoutPadding;
+
+                var columns = 4;
+                var rows = (int)Math.Ceiling((float)fullReleseData.Episodes.Length / columns);
+                var episodesGrid = new View()
+                {
+                    Layout = new GridLayout
+                    {
+                        Columns = columns,
+                        Rows = rows,
+                        ColumnSpacing = _layoutPadding,
+                        RowSpacing = _layoutPadding,
+                        GridOrientation = GridLayout.Orientation.Horizontal,
+                    },
+                };
+                _episodesScrollContainer.View.Add(episodesGrid);
+
+                var focusMatrix = new View[rows, columns];
+
+                var column = 0;
+                var row = 0;
+                foreach (var episodeData in fullReleseData.Episodes)
+                {
+                    var episode = new Episode(episodeData, _imageService);
+
+                    episodesGrid.Add(episode.View);
+                    GridLayout.SetColumn(episode.View, column);
+                    GridLayout.SetRow(episode.View, row);
+
+                    focusMatrix[row, column] = episode.View;
+
+                    if (column + 1 < columns)
+                    {
+                        column++;
+                    }
+                    else if (column < fullReleseData.Episodes.Length - 1)
+                    {
+                        row++;
+                        column = 0;
+                    }
+                }
 
                 AnimateOpacityTo(episodesSection, 1);
             }

@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <Folder Include="lib\" />
-    <Folder Include="shared\res\images\" />
   </ItemGroup>
 
   <ItemGroup>
