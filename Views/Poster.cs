@@ -36,10 +36,10 @@ namespace AnilibriaAppTizen.Views
             _posterSize = new Size(main.PosterWidth, main.PosterHeight);
             _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
 
-            _ = InitializeAsync();
+            InitializeAsync();
         }
 
-        public async Task InitializeAsync()
+        public async void InitializeAsync()
         {
             _posterView = new VisualView()
             {
@@ -58,9 +58,9 @@ namespace AnilibriaAppTizen.Views
                 URL = await _imageService.GetPath(url),
                 //URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg",
                 FittingMode = FittingModeType.ScaleToFill,
-                AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/alphaMask.png",
-                DesiredHeight = 500,
-                DesiredWidth = 350,
+                AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/posterAlphaMask.png",
+                DesiredHeight = (int)_posterView.SizeHeight * 2,
+                DesiredWidth = (int)_posterView.SizeWidth * 2,
             };
             _posterView.AddVisual(url, _imageVisual);
         }
