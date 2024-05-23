@@ -49,7 +49,7 @@ namespace AnilibriaAppTizen.Services
             return Path.Combine(_imageCacheFolder, Path.GetFileName(imagePath));
         }
 
-        private async Task CacheImageAsync(string imagePath)
+        private async Task<string> CacheImageAsync(string imagePath)
         {
             var filePath = Path.Combine(_imageCacheFolder, Path.GetFileName(imagePath));
 
@@ -58,6 +58,7 @@ namespace AnilibriaAppTizen.Services
             await stream.CopyToAsync(fileStream);
 
             _imagesList.Add(filePath);
+            return filePath;
         }
 
         public async Task<string> GetPath(string imagePath)
@@ -65,14 +66,9 @@ namespace AnilibriaAppTizen.Services
             await InitializeAsync();
 
             if (CacheContains(imagePath))
-            {
                 return GetCachedImage(imagePath);
-            }
             else
-            {
-                _ = CacheImageAsync(imagePath);
-                return _baseUri + imagePath;
-            }
+                return await CacheImageAsync(imagePath);
         }
 
         public List<string> GetImgs()
