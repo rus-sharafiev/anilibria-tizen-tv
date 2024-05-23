@@ -1,5 +1,4 @@
-﻿using AnilibriaAppTizen.Models;
-using AnilibriaAppTizen.Services;
+﻿using AnilibriaAppTizen.Services;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -13,6 +12,7 @@ namespace AnilibriaAppTizen.Views
     internal class Release
     {
         private readonly ApiService _apiService;
+        private readonly ImageService _imageService;
 
         private static readonly float _padding = 40;
         private static readonly float _layoutPadding = 10;
@@ -35,9 +35,10 @@ namespace AnilibriaAppTizen.Views
 
         public bool IsActive { get { return _isActive; } }
 
-        public Release(ApiService apiService)
+        public Release(ApiService apiService, ImageService imageService)
         {
             _apiService = apiService;
+            _imageService = imageService;
             _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
         }
 
@@ -51,7 +52,7 @@ namespace AnilibriaAppTizen.Views
             Window.Instance.Add(_releaseView);
         }
 
-        public void Render(View originalPosterView, Position posterPosition, Models.Release release)
+        public async void Render(View originalPosterView, Position posterPosition, Models.Release release)
         {
             _isActive = true;
             _originalPosterView = originalPosterView;
@@ -69,7 +70,8 @@ namespace AnilibriaAppTizen.Views
 
             var imageVisual = new ImageVisual
             {
-                URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg", // _posterUrl,
+                URL = await _imageService.GetPath(release.Poster.Src),
+                //URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg",
                 FittingMode = FittingModeType.ScaleToFill,
                 AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/alphaMask.png",
                 DesiredHeight = 500,
@@ -98,6 +100,7 @@ namespace AnilibriaAppTizen.Views
                     LinearOrientation = LinearLayout.Orientation.Vertical,
                     CellPadding = new Size(_padding, _padding),
                 },
+                ClippingMode = ClippingModeType.ClipChildren,
             };
             _releaseContainer.Add(releaseInfo);
 

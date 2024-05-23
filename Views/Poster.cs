@@ -1,5 +1,7 @@
-﻿using System;
+﻿using AnilibriaAppTizen.Services;
+using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
@@ -9,54 +11,35 @@ namespace AnilibriaAppTizen.Views
     internal class Poster
     {
         private readonly Size _posterSize;
+        private readonly ImageService _imageService;
 
-        private readonly View _mainPageView;
         private readonly Release _releasePage;
         private VisualView _posterView;
         private ImageVisual _imageVisual;
         private readonly Models.Release _releaseData;
-        private readonly string _posterUrl;
         private readonly AlphaFunction _easeOut;
 
-        private View _parentContainer;
+        private View[] _parentContainers = Array.Empty<View>();
 
         public event EventHandler FocusGained;
         public event EventHandler Activated;
 
-        public VisualView View 
-        {
-            get { return _posterView; }
-        }
+        public VisualView View { get => _posterView; }
+        public Size PosterSize { get => _posterSize; }
+        public View[] ParentContainers { set => _parentContainers = value; }
 
-        public Size PosterSize
+        public Poster(Models.Release releaseData, Main main)
         {
-            get { return _posterSize; }
-        }
-
-        public string URL
-        {
-            get { return _posterUrl; }
-        }
-
-        public View ParentContainer
-        {
-            set { _parentContainer = value; }
-        }
-
-        public Poster(string posterUrl, MainPage mainPage, Models.Release releaseData)
-        {
-            _mainPageView = mainPage.View;
-            _posterUrl = posterUrl;
-            _releasePage = mainPage.ReleasePage;
+            _releasePage = main.ReleasePage;
+            _imageService = main.ImageService;
             _releaseData = releaseData;
-            _posterSize = new Size(mainPage.PosterWidth, mainPage.PosterHeight);
+            _posterSize = new Size(main.PosterWidth, main.PosterHeight);
             _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
 
-            Initialize();
+            _ = InitializeAsync();
         }
 
-
-        public void Initialize()
+        public async Task InitializeAsync()
         {
             _posterView = new VisualView()
             {
@@ -68,23 +51,32 @@ namespace AnilibriaAppTizen.Views
             _posterView.FocusLost += PosterView_FocusLost;
             _posterView.KeyEvent += PosterView_KeyEvent;
 
+            var url = _releaseData.Poster.Src;
+
             _imageVisual = new ImageVisual
             {
-                URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg", // _posterUrl,
+                URL = await _imageService.GetPath(url),
+                //URL = Application.Current.DirectoryInfo.SharedResource + "images/poster.jpg",
                 FittingMode = FittingModeType.ScaleToFill,
                 AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/alphaMask.png",
                 DesiredHeight = 500,
                 DesiredWidth = 350,
             };
-            _posterView.AddVisual(_posterUrl, _imageVisual);
+            _posterView.AddVisual(url, _imageVisual);
         }
 
         private bool PosterView_KeyEvent(object source, View.KeyEventArgs e)
         {
             if (e.Key.State == Key.StateType.Down && e.Key.KeyPressedName == "Return")
             {
-                var posX = _posterView.PositionX + _parentContainer.PositionX + _mainPageView.PositionX - _posterView.SizeWidth * 0.1f;
-                var posY = _posterView.PositionY + _parentContainer.PositionY + _mainPageView.PositionY - _posterView.SizeHeight * 0.1f;
+                var posX = _posterView.PositionX - _posterView.SizeWidth * 0.1f;
+                var posY = _posterView.PositionY - _posterView.SizeHeight * 0.1f;
+
+                foreach (var container in _parentContainers)
+                {
+                    posX += container.PositionX;
+                    posY += container.PositionY;
+                }
 
                 _releasePage.Render(_posterView, new Position(posX, posY), _releaseData);
                 Activated?.Invoke(this, new EventArgs());
