@@ -9,8 +9,8 @@ namespace AnilibriaAppTizen.Views
         private readonly UserService _userService;
 
         private View _accountView;
-        private MainPage _mainPage;
-        private View _mainPageView;
+        private Main _main;
+        private View _mainView;
         private bool _isActive = false;
 
         public bool IsActive { get { return _isActive; } }
@@ -20,20 +20,20 @@ namespace AnilibriaAppTizen.Views
             _userService = userService;
         }
 
-        public void RenderTo(MainPage mainPage)
+        public void RenderTo(Main main)
         {
             _isActive = true;
-            _mainPage = mainPage;
-            _mainPageView = mainPage.View;
+            _main = main;
+            _mainView = main.View;
             _userService.UserChanged += UserService_UserChanged;
 
             if (_userService.User != null)
-                _mainPage.SetTitle("Профиль", "пользователя");
+                _main.SetTitle("Профиль", "пользователя");
             else
-                _mainPage.SetTitle("Авторизация");
+                _main.SetTitle("Авторизация");
 
             _accountView = new View();
-            _mainPageView.Add(_accountView);
+            _mainView.Add(_accountView);
             _accountView.RemovedFromWindow += SettingsView_RemovedFromWindow;
         }
 
@@ -42,11 +42,11 @@ namespace AnilibriaAppTizen.Views
             if (sender is UserService userService)
                 if (userService.User != null)
                 {
-                    _mainPage.SetTitle("Профиль", "пользователя");
+                    _main.SetTitle("Профиль", "пользователя");
                 }
                 else
                 {
-                    _mainPage.SetTitle("Авторизация");
+                    _main.SetTitle("Авторизация");
                 }
         }
 

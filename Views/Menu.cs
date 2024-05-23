@@ -18,7 +18,7 @@ namespace AnilibriaAppTizen.Views
         readonly int windowSizeHeight = Window.Instance.Size.Height;
         #pragma warning restore CS0618
 
-        private readonly MainPage _mainPage;
+        private readonly Main _main;
         private readonly AlphaFunction _easeOut;
 
         private View _menuView;
@@ -56,9 +56,9 @@ namespace AnilibriaAppTizen.Views
             get { return _expandedWidth; }
         }
 
-        public Menu(MainPage mainPage, UserService userService)
+        public Menu(Main main, UserService userService)
         {
-            _mainPage = mainPage;
+            _main = main;
             _userService = userService;
             _easeOut =  new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
 
@@ -203,8 +203,8 @@ namespace AnilibriaAppTizen.Views
             }
             _animation = new Animation(280);
             _animation.AnimateTo(_menuView, "SizeWidth", destination, _easeOut);
-            _animation.AnimateTo(_mainPage.View, "PositionX", destination, _easeOut);
-            _animation.AnimateTo(_mainPage.TitleView, "PositionX", destination, _easeOut);
+            _animation.AnimateTo(_main.View, "PositionX", destination, _easeOut);
+            _animation.AnimateTo(_main.TitleView, "PositionX", destination, _easeOut);
             _animation.Play();
         }
 

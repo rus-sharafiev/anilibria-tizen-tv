@@ -5,7 +5,7 @@ using Tizen.NUI.BaseComponents;
 
 namespace AnilibriaAppTizen.Views
 {
-    internal class MainPage
+    internal class Main
     {
         private readonly int _titleHeight = 80;
 
@@ -14,6 +14,8 @@ namespace AnilibriaAppTizen.Views
         private readonly int windowSizeHeight = Window.Instance.Size.Height;
         #pragma warning restore CS0618
 
+        private readonly ImageService _imageService;
+        private readonly ApiService _apiService;
         private readonly Menu _menu;
         private readonly Home _home;
         private readonly Schedule _schedule;
@@ -33,38 +35,23 @@ namespace AnilibriaAppTizen.Views
         private float _posterWidth;
         private float _posterHeight;
 
-        public int Columns { get { return _columns; } }
-        public int PosterSpacing { get { return _posterSpacing; } }
-        public float PosterWidth { get { return _posterWidth; } }
-        public float PosterHeight { get { return _posterHeight; } }
+        public int Columns { get => _columns; }
+        public int PosterSpacing { get => _posterSpacing; }
+        public float PosterWidth { get => _posterWidth; }
+        public float PosterHeight { get => _posterHeight; }
+        public View View { get => _mainPageView; }
+        public View TitleView { get => _mainTitleView; }
+        public Menu Menu { get => _menu; }
+        public Release ReleasePage { get => _release; }
+        public MenuButton ActiveMenuButton { get => _menu.ActiveButton; }
+        public ImageService ImageService { get => _imageService; }
+        public ApiService ApiService { get => _apiService; }
 
-        public View View
-        {
-            get { return _mainPageView; }
-        }
-        public View TitleView
-        {
-            get { return _mainTitleView; }
-        }
-
-        public Menu Menu
-        {
-            get { return _menu; }
-        }
-
-        public Release ReleasePage
-        {
-            get { return _release; }
-        }
-
-        public MenuButton ActiveMenuButton
-        {
-            get { return _menu.ActiveButton; }
-        }
-
-        public MainPage(ApiService apiService, ImageService imageService, UserService userService, Release releasePage)
+        public Main(ApiService apiService, ImageService imageService, UserService userService, Release releasePage)
         {
             _release = releasePage;
+            _apiService = apiService;
+            _imageService = imageService;
 
             _menu = new Menu(this, userService);
             _home = new Home(apiService, imageService);
@@ -104,7 +91,7 @@ namespace AnilibriaAppTizen.Views
                 Name = "Main title view",
             };
             _view.Add(_mainTitleView);
-            
+
             _title = new TextLabel
             {
                 Text = "",

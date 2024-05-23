@@ -10,7 +10,7 @@ namespace AnilibriaAppTizen.Views
         private readonly ImageService _imageService;
 
         private View _searchView;
-        private View _mainPageView;
+        private View _mainView;
         private bool _isActive = false;
 
         public bool IsActive { get { return _isActive; } }
@@ -21,14 +21,14 @@ namespace AnilibriaAppTizen.Views
             _imageService = imageService;
         }
 
-        public void RenderTo(MainPage mainPage, Release release)
+        public void RenderTo(Main main, Release release)
         {
             _isActive = true;
-            _mainPageView = mainPage.View;
-            mainPage.SetTitle("Поиск");
+            _mainView = main.View;
+            main.SetTitle("Поиск");
 
             _searchView = new View();
-            _mainPageView.Add(_searchView);
+            _mainView.Add(_searchView);
             _searchView.RemovedFromWindow += SettingsView_RemovedFromWindow;
         }
 

@@ -11,7 +11,7 @@ namespace AnilibriaAppTizen.Views
         private readonly ImageService _imageService;
 
         private View _homeView;
-        private View _mainPageView;
+        private View _mainView;
         private bool _isActive = false;
 
         public bool IsActive { get { return _isActive; } }
@@ -22,16 +22,16 @@ namespace AnilibriaAppTizen.Views
             _imageService = imageService;
         }
 
-        public void RenderTo(MainPage mainPage, Release release, bool updateData = false)
+        public void RenderTo(Main main, Release release, bool updateData = false)
         {
             _isActive = true;
-            _mainPageView = mainPage.View;
-            mainPage.SetTitle("Главная");
+            _mainView = main.View;
+            main.SetTitle("Главная");
 
             _homeView = new View()
             {
             };
-            _mainPageView.Add(_homeView);
+            _mainView.Add(_homeView);
             _homeView.RemovedFromWindow += HomeView_RemovedFromWindow;
         }
 

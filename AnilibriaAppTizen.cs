@@ -14,7 +14,7 @@ namespace AnilibriaAppTizen
         private LocalSettingsService _localSettingsService;
         private UserService _userService;
 
-        private MainPage _mainPage;
+        private Main _main;
         private Release _release;
 
         /// <summary>
@@ -36,19 +36,19 @@ namespace AnilibriaAppTizen
             _userService = new UserService(_localSettingsService, _apiService);
 
             // Views
-            _release = new Release(_apiService);
-            _mainPage = new MainPage(_apiService, _imageService, _userService, _release);
+            _release = new Release(_apiService, _imageService);
+            _main = new Main(_apiService, _imageService, _userService, _release);
 
             // Init user session
             await _userService.InitializeAsync();
 
             // Init views
-            _mainPage.Initialize();
+            _main.Initialize();
             _release.Initialize();
 
             FocusManager.Instance.FocusIndicator = new View();
             FocusManager.Instance.FocusChanged += FocusManager_FocusChanged;
-            FocusManager.Instance.SetCurrentFocusView(_mainPage.ActiveMenuButton.View);
+            FocusManager.Instance.SetCurrentFocusView(_main.ActiveMenuButton.View);
         }
 
         /// <summary>
