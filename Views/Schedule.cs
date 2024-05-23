@@ -9,25 +9,19 @@ namespace AnilibriaAppTizen.Views
 {
     internal class Schedule
     {
+        private readonly float _dayLabelfontSize = 64;
+
         private readonly ApiService _apiService;
         private readonly ImageService _imageService;
 
-        private View _mainPageView;
+        private View _mainView;
         private View _activeMenuBtn;
-        private Release _release;
-        private Error _error;
+        private ScrollContainer _scrollContainer;
 
         private View _lastFocusedView;
-        private readonly float _dayLabelfontSize = 64;
-        private readonly int _animationDuration = 280;
 
         private View _scheduleView;
-        private View _scheduleViewScrollContainer;
         private WeekDay[] _weekDays;
-
-        private Animation _scheduleScrollAnimation;
-        private AlphaFunction _easeOut;
-        private float _scrollPosition;
 
         private bool _isActive = false;
 
@@ -44,29 +38,24 @@ namespace AnilibriaAppTizen.Views
         {
             _apiService = apiService;
             _imageService = imageService;
-
-            _scheduleScrollAnimation = new Animation(_animationDuration);
-            _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
         }
 
-        public async void RenderTo(MainPage mainPage, Release release, bool updateData = false)
+        public async void RenderTo(Main main, Release release, bool updateData = false)
         {
             _isActive = true;
-            mainPage.SetTitle("Расписание", "выхода новых эпизодов", 320);
+            main.SetTitle("Расписание", "выхода новых эпизодов", 320);
 
-            _mainPageView = mainPage.View;
-            _activeMenuBtn = mainPage.ActiveMenuButton.View;
-            _release = release;
-            _scrollPosition = 0;
+            _mainView = main.View;
+            _activeMenuBtn = main.ActiveMenuButton.View;
 
-            _columns = mainPage.Columns;
-            _posterSpacing = mainPage.PosterSpacing;
-            _posterWidth = mainPage.PosterWidth;
-            _posterHeight = mainPage.PosterHeight;
+            _columns = main.Columns;
+            _posterSpacing = main.PosterSpacing;
+            _posterWidth = main.PosterWidth;
+            _posterHeight = main.PosterHeight;
             _posterSize = new Size(_posterWidth, _posterHeight);
 
             ScheduleRelease[] scheduleReleases = Array.Empty<ScheduleRelease>();
-            var loading = new LoadingIndicator().AddTo(_mainPageView);
+            var loading = new LoadingIndicator().AddTo(_mainView);
 
             try
             {
@@ -80,7 +69,7 @@ namespace AnilibriaAppTizen.Views
             }
             catch (Exception e)
             {
-                _error = new Error(e);
+                new Error(e);
             }
             finally
             {
@@ -94,26 +83,27 @@ namespace AnilibriaAppTizen.Views
                 rows += 1 + (int)Math.Ceiling((float)day.Releases.Count / _columns);
             }
 
-            _scheduleViewScrollContainer = new View
+            _scrollContainer = new ScrollContainer
             {
-                PositionX = _posterWidth * 0.1f + _posterSpacing,
+                TopScrollIndentation = _dayLabelfontSize,
+                BottomScrollIndentation = _posterHeight * 0.2f,
             };
-            _mainPageView.Add(_scheduleViewScrollContainer);
+            _mainView.Add(_scrollContainer.View);
 
-            var scheduleViewLayout = new GridLayout
-            {
-                Columns = _columns,
-                Rows = rows,
-                ColumnSpacing = _posterSpacing,
-                RowSpacing = _posterSpacing,
-                GridOrientation = GridLayout.Orientation.Horizontal,
-            };
             _scheduleView = new View()
             {
-                Layout = scheduleViewLayout,
+                Layout = new GridLayout
+                {
+                    Columns = _columns,
+                    Rows = rows,
+                    ColumnSpacing = _posterSpacing,
+                    RowSpacing = _posterSpacing,
+                    GridOrientation = GridLayout.Orientation.Horizontal,
+                },
+                PositionX = _posterWidth * 0.1f + _posterSpacing
             };
-            _scheduleViewScrollContainer.Add(_scheduleView);
-            _scheduleViewScrollContainer.RemovedFromWindow += ScheduleView_RemovedFromWindow;
+            _scrollContainer.View.Add(_scheduleView);
+            _scrollContainer.View.RemovedFromWindow += ScheduleView_RemovedFromWindow;
 
             var focusMatrixRow = 0;
             var focusMatrix = new View[rows, _columns];
@@ -151,11 +141,12 @@ namespace AnilibriaAppTizen.Views
                 focusMatrixRow++;
                 foreach (var dayRelease in day.Releases)
                 {
-                    var url = "https://anilibria.top" + dayRelease.Poster.Src;
-                    var releasePoster = new Poster(url, mainPage, dayRelease);
-                    releasePoster.View.Name = $"ScheduleRelease_{row}_{column}";
+                    var releasePoster = new Poster(dayRelease, main);
                     releasePoster.FocusGained += ReleasePoster_FocusGained;
-                    releasePoster.ParentContainer = _scheduleViewScrollContainer;
+                    releasePoster.View.Name = $"ScheduleRelease_{row}_{column}";
+                    releasePoster.ParentContainers = new View[] { 
+                        _scheduleView, _scrollContainer.View, _mainView
+                    };
 
                     _scheduleView.Add(releasePoster.View);
                     GridLayout.SetColumn(releasePoster.View, column);
@@ -222,44 +213,9 @@ namespace AnilibriaAppTizen.Views
         {
             if (sender is Poster poster)
             {
-                ScrollTo(poster.View);
+                _scrollContainer.ScrollTo(poster.View);
                 _activeMenuBtn.RightFocusableView = poster.View;
             }
-        }
-
-        private void ScrollTo(View focusedView)
-        {
-            float focusedViewTop = focusedView.PositionY;
-            float focusedViewBottom = focusedView.PositionY + _posterHeight;
-
-            float visibleRectangleTop = -_scheduleViewScrollContainer.PositionY + _dayLabelfontSize;
-            float visibleRectangleBottom = -_scheduleViewScrollContainer.PositionY + _mainPageView.SizeHeight - _posterHeight * 0.2f;
-
-            if (focusedViewTop < visibleRectangleTop)
-            {
-                _scrollPosition += visibleRectangleTop - focusedViewTop;
-                AnimateTo(_scrollPosition);
-            }
-            else if (focusedViewBottom > visibleRectangleBottom)
-            {
-                _scrollPosition -= focusedViewBottom - visibleRectangleBottom;
-                AnimateTo(_scrollPosition);
-            }
-        }
-
-        public void AnimateTo(float destination)
-        {
-            if (_scheduleScrollAnimation != null)
-            {
-                if (_scheduleScrollAnimation.State == Animation.States.Playing)
-                {
-                    _scheduleScrollAnimation.Stop();
-                }
-                _scheduleScrollAnimation.Clear();
-            }
-            _scheduleScrollAnimation = new Animation(_animationDuration);
-            _scheduleScrollAnimation.AnimateTo(_scheduleViewScrollContainer, "PositionY", destination, _easeOut);
-            _scheduleScrollAnimation.Play();
         }
 
         private void ScheduleView_RemovedFromWindow(object sender, EventArgs e)
