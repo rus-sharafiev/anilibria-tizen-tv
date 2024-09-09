@@ -12,7 +12,7 @@ namespace AnilibriaAppTizen.Services
 
     internal class ImageService
     {
-        private const string _baseUri = "https://static.wwnd.space";
+        private const string _baseUri = "https://anilibria.top";
 
         private readonly string _imageCacheFolder = Path.Combine(Application.Current.DirectoryInfo.Data, "cachedImages");
         private bool _isInitialized;
@@ -64,11 +64,15 @@ namespace AnilibriaAppTizen.Services
         public async Task<string> GetPath(string imagePath)
         {
             await InitializeAsync();
+            //return _baseUri + imagePath;
 
             if (CacheContains(imagePath))
                 return GetCachedImage(imagePath);
             else
-                return await CacheImageAsync(imagePath);
+            {
+                _ = CacheImageAsync(imagePath);
+                return _baseUri + imagePath;
+            }
         }
 
         public List<string> GetImgs()
