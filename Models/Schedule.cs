@@ -12,7 +12,7 @@ namespace AnilibriaAppTizen.Models
         [JsonPropertyName("new_release_episode")]
         public Episode NewReleaseEpisode { get; set; }
         [JsonPropertyName("new_release_episode_ordinal")]
-        public long NewReleaseEpisodeOrdinal { get; set; }
+        public long? NewReleaseEpisodeOrdinal { get; set; }
     }
 
     public class WeekDay
