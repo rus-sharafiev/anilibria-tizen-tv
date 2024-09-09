@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Tizen.Applications;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
+using Tizen.Pims.Contacts.ContactsViews;
 
 namespace AnilibriaAppTizen.Views
 {
@@ -26,6 +27,7 @@ namespace AnilibriaAppTizen.Views
 
         private View _releaseView;
         private View _releaseContainer;
+        private View _playBtn;
         private bool _isActive = false;
 
         private VisualView _posterView;
@@ -41,7 +43,7 @@ namespace AnilibriaAppTizen.Views
         {
             _apiService = apiService;
             _imageService = imageService;
-            _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseOutSquare);
+            _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseInOut);
         }
 
         public void Initialize()
@@ -61,6 +63,7 @@ namespace AnilibriaAppTizen.Views
             _posterStartPosition = posterPosition;
             _posterStartSize = new Size(originalPosterView.SizeWidth * 1.2f, originalPosterView.SizeHeight * 1.2f);
 
+            // Poster
             _posterView = new VisualView()
             {
                 Size = _posterStartSize,
@@ -91,6 +94,60 @@ namespace AnilibriaAppTizen.Views
             };
             _releaseView.Add(_releaseContainer);
 
+            // Play button
+            _playBtn = new View
+            {
+                Focusable = true,
+                SizeHeight = 70,
+                SizeWidth = _posterWidth,
+                PositionX = _padding,
+                PositionY = _posterHeight + _padding + 10,
+                Name = "play-btn",
+                Opacity = 0.6f
+            };
+            _releaseContainer.Add(_playBtn);
+
+            var playIcon = new VisualView()
+            {
+                Size = new Size2D(24, 24),
+                PositionX = 25,
+                PositionY = 23,
+            };
+            _playBtn.Add(playIcon);
+
+            var playIconVisual = new SVGVisual
+            {
+                URL = Application.Current.DirectoryInfo.SharedResource + "icons/play.svg"
+            };
+            playIcon.AddVisual("play-icon", playIconVisual);
+
+            var textLabel = new TextLabel
+            {
+                Text = "Начать просмотр",
+                FontFamily = "Roboto",
+                PointSize = 24,
+                TextColor = Color.White,
+                PositionX = 67,
+                SizeHeight = 70,
+                VerticalAlignment = VerticalAlignment.Center,
+            };
+            _playBtn.Add(textLabel);
+
+            _playBtn.FocusGained += (obj, e) =>
+            {
+                playIconVisual.URL = Application.Current.DirectoryInfo.SharedResource + "icons/play_filled.svg";
+                AnimateOpacityTo(_playBtn, 1.0f);
+            };
+            _playBtn.FocusLost += (obj, e) =>
+            {
+                playIconVisual.URL = Application.Current.DirectoryInfo.SharedResource + "icons/play.svg";
+                AnimateOpacityTo(_playBtn, 0.6f);
+            };
+            _playBtn.RightFocusableView = null;
+            _playBtn.LeftFocusableView = null;
+            _playBtn.UpFocusableView = null;
+
+            // Info container
             var releaseInfo = new View
             {
                 PositionX = _posterWidth + _padding * 2,
@@ -241,7 +298,7 @@ namespace AnilibriaAppTizen.Views
             _ = RenderEpisodesAsync(release.Id);
 
             AnimateContainerOpacityTo(1);
-
+            FocusManager.Instance.SetCurrentFocusView(_playBtn);
         }
 
         public async Task RenderEpisodesAsync(int releaseId)
@@ -334,6 +391,11 @@ namespace AnilibriaAppTizen.Views
 
                     focusMatrix[row, column] = episode.View;
 
+                    if (column == 0 && row == 0) 
+                    { 
+                        _playBtn.DownFocusableView = episode.View;
+                    }
+
                     if (column + 1 < columns)
                     {
                         column++;
@@ -345,12 +407,48 @@ namespace AnilibriaAppTizen.Views
                     }
                 }
 
+                // Create focus matrix
+                for (int r = 0; r < focusMatrix.GetLength(0); r++)
+                    for (int c = 0; c < focusMatrix.GetLength(1); c++)
+                        if (focusMatrix[r, c] != null)
+                        {
+                            if (r > 0)
+                                focusMatrix[r, c].UpFocusableView = GetClothestView(focusMatrix, r - 1, c);
+                            else if (r == 0)
+                                focusMatrix[r, c].UpFocusableView = _playBtn;
+
+                            if (r < focusMatrix.GetLength(0) - 1)
+                                focusMatrix[r, c].DownFocusableView = GetClothestView(focusMatrix, r + 1, c);
+
+                            if (c > 0)
+                                focusMatrix[r, c].LeftFocusableView = focusMatrix[r, c - 1];
+
+                            if (c < focusMatrix.GetLength(1) - 1)
+                                focusMatrix[r, c].RightFocusableView = focusMatrix[r, c + 1];
+                        }
+
                 AnimateOpacityTo(episodesSection, 1);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"{ex.Message}");
             }
+        }
+
+        private View GetClothestView(View[,] focusMatrix, int r, int c)
+        {
+            if (focusMatrix[r, c] != null)
+                return focusMatrix[r, c];
+            else if (c > 0)
+                for (int i = c - 1; i > 0; i--)
+                {
+                    if (focusMatrix[r, i] != null)
+                    {
+                        return focusMatrix[r, i];
+                    }
+                }
+
+            return null;
         }
 
         public void AnimatePosterTo(View poster, Position position, Size size)
@@ -395,6 +493,7 @@ namespace AnilibriaAppTizen.Views
             AnimateContainerOpacityTo(0);
             _animation.Finished += (_, ev) =>
             {
+                FocusManager.Instance.SetCurrentFocusView(_originalPosterView);
                 _isActive = false;
                 _releaseContainer.Unparent();
                 _releaseContainer.Dispose();
