@@ -37,13 +37,16 @@ namespace AnilibriaAppTizen.Views
         private ScrollContainer _episodesScrollContainer;
         private Animation _animation;
 
+        private Player _player;
+
         public bool IsActive { get { return _isActive; } }
 
-        public Release(ApiService apiService, ImageService imageService)
+        public Release(ApiService apiService, ImageService imageService, Player player)
         {
             _apiService = apiService;
             _imageService = imageService;
             _easeOut = new AlphaFunction(AlphaFunction.BuiltinFunctions.EaseInOut);
+            _player = player;
         }
 
         public void Initialize()
@@ -384,6 +387,7 @@ namespace AnilibriaAppTizen.Views
                 foreach (var episodeData in fullReleseData.Episodes)
                 {
                     var episode = new Episode(episodeData, _imageService);
+                    episode.Activated += Episode_Activated;
 
                     episodesGrid.Add(episode.View);
                     GridLayout.SetColumn(episode.View, column);
@@ -432,6 +436,14 @@ namespace AnilibriaAppTizen.Views
             catch (Exception ex)
             {
                 Debug.WriteLine($"{ex.Message}");
+            }
+        }
+
+        private void Episode_Activated(object sender, EventArgs e)
+        {
+            if (sender is Episode episode)
+            {
+                _player.OpenVideo(episode.EpisodeData.Hls1080, episode);
             }
         }
 
@@ -523,6 +535,16 @@ namespace AnilibriaAppTizen.Views
             var minutesString = DeclensionOfNumber((int)minutes, minutesDeclensionList);
 
             return $"{hoursString}, {minutesString}";
+        }
+
+        public void Hide()
+        {
+            _releaseView.Opacity = 0;
+        }
+
+        public void Show()
+        {
+            _releaseView.Opacity = 1;
         }
     }
 }

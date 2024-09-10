@@ -176,7 +176,7 @@ namespace AnilibriaAppTizen.Views
 
         private Animation AnimateOpacityTo(float destination, View view)
         {
-            var animation = new Animation(140);
+            var animation = new Animation(280);
             animation.AnimateTo(view, "Opacity", destination);
             animation.Play();
             animation.Finished += (a, e) =>
@@ -199,6 +199,16 @@ namespace AnilibriaAppTizen.Views
                     view.Remove(view.Children[i]);
                 }
             }
+        }
+
+        public void Hide()
+        {
+            _view.Opacity = 0;
+        }
+
+        public void Show()
+        {
+            _view.Opacity = 1;
         }
     }
 }
