@@ -7,8 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Tizen.Applications;
+using Tizen.Multimedia;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
+using Tizen.TV;
 
 namespace AnilibriaAppTizen.Views
 {
@@ -24,7 +26,11 @@ namespace AnilibriaAppTizen.Views
         private VisualView _playVisualView;
         private Models.Episode _episodeData;
 
+        public event EventHandler FocusGained;
+        public event EventHandler Activated;
+
         public View View { get => _episodeView; }
+        public Models.Episode EpisodeData { get => _episodeData; }
 
         public Episode (Models.Episode episodeData, ImageService imageService)
         {
@@ -45,6 +51,7 @@ namespace AnilibriaAppTizen.Views
             };
             _episodeView.FocusGained += EpisodeView_FocusGained;
             _episodeView.FocusLost += EpisodeView_FocusLost;
+            _episodeView.KeyEvent += EpisodeView_KeyEvent;
 
             var preview = new VisualView
             {
@@ -80,7 +87,7 @@ namespace AnilibriaAppTizen.Views
 
             var playVisual = new SVGVisual
             {
-                URL = Application.Current.DirectoryInfo.SharedResource + "icons/play.svg",
+                URL = Application.Current.DirectoryInfo.SharedResource + "icons/play_filled.svg",
                 SizePolicy = VisualTransformPolicyType.Absolute,
                 Size = new Size2D(48, 48),
                 PositionPolicy= VisualTransformPolicyType.Absolute,
@@ -96,7 +103,7 @@ namespace AnilibriaAppTizen.Views
                 Layout = new LinearLayout
                 {
                     LinearOrientation = LinearLayout.Orientation.Vertical,
-                    CellPadding = new Size(_padding, _padding),
+                    CellPadding = new Tizen.NUI.Size(_padding, _padding),
                 }
             };
             _episodeView.Add(episodeInfo);
@@ -124,9 +131,19 @@ namespace AnilibriaAppTizen.Views
             episodeInfo.Add(episodeTitle);
         }
 
+        private bool EpisodeView_KeyEvent(object source, View.KeyEventArgs e)
+        {
+            if (e.Key.State == Key.StateType.Down && e.Key.KeyPressedName == "Return")
+            {
+                Activated?.Invoke(this, new EventArgs());
+            }
+            return false;
+        }
+
         private void EpisodeView_FocusGained(object sender, EventArgs e)
         {
             AnimateOpacity(1);
+            FocusGained?.Invoke(this, new EventArgs());
         }
 
         private void EpisodeView_FocusLost(object sender, EventArgs e)
