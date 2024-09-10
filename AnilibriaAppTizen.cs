@@ -16,6 +16,7 @@ namespace AnilibriaAppTizen
 
         private Main _main;
         private Release _release;
+        private Player _player;
 
         /// <summary>
         /// Initialize application
@@ -27,6 +28,7 @@ namespace AnilibriaAppTizen
 
             // Add main key event
             Window.Instance.KeyEvent += OnKeyEvent;
+            Window.Instance.BackgroundColor = Color.Transparent;
 
             // Create services
             _apiService = new ApiService();
@@ -36,7 +38,8 @@ namespace AnilibriaAppTizen
             _userService = new UserService(_localSettingsService, _apiService);
 
             // Views
-            _release = new Release(_apiService, _imageService);
+            _player = new Player();
+            _release = new Release(_apiService, _imageService, _player);
             _main = new Main(_apiService, _imageService, _userService, _release);
 
             // Init user session
@@ -45,6 +48,7 @@ namespace AnilibriaAppTizen
             // Init views
             _main.Initialize();
             _release.Initialize();
+            _player.Initialize(_release, _main);
 
             FocusManager.Instance.FocusIndicator = new View();
             FocusManager.Instance.FocusChanged += FocusManager_FocusChanged;
@@ -58,14 +62,52 @@ namespace AnilibriaAppTizen
         /// <param name="e">Key's args</param>
         private void OnKeyEvent(object sender, Window.KeyEventArgs e)
         {
-            if (e.Key.State == Key.StateType.Down && (e.Key.KeyPressedName == "Escape" || e.Key.KeyPressedName == "XF86Back"))
-            {
-                if (_release.IsActive)
-                    _release.Dispose();
-                else
-                    Exit();
-            }
+            // Home - XF86Home
+            // play/pause - XF86PlayBack
+            // next - XF86RaiseChannel
+            // prev - XF86LowerChannel
+            // ch_push - XF86ChannelGuide
+            // Right, Down, Left, Up, Return
 
+            if (e.Key.State == Key.StateType.Down)
+                if (_player.IsActive)
+                {
+                    var player = _player.Instance;
+                    switch (e.Key.KeyPressedName)
+                    {
+                        case "XF86PlayBack":  
+                            if (player.State == Tizen.Multimedia.PlayerState.Playing)
+                                player.Pause();
+                            else if (player.State == Tizen.Multimedia.PlayerState.Paused)
+                                player.Start();
+                            break;
+
+                        case "Right":
+                            player.SetPlayPositionAsync(player.GetPlayPosition() + 5000, false);
+                            break;
+
+                        case "Left":
+                            player.SetPlayPositionAsync(player.GetPlayPosition() - 5000, false);
+                            break;
+
+                        case "XF86Back":
+                            _player.Dispose();
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+                else
+                {
+                    if (e.Key.KeyPressedName == "Escape" || e.Key.KeyPressedName == "XF86Back")
+                    {
+                        if (_release.IsActive)
+                            _release.Dispose();
+                        else
+                            Exit();
+                    }
+                }
         }
 
         /// <summary>
