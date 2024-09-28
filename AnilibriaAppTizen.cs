@@ -43,6 +43,7 @@ namespace AnilibriaAppTizen
             _main = new Main(_apiService, _imageService, _userService, _release);
 
             // Init user session
+            await _imageService.InitializeAsync();
             await _userService.InitializeAsync();
 
             // Init views
@@ -83,15 +84,15 @@ namespace AnilibriaAppTizen
                             break;
 
                         case "Right":
-                            player.SetPlayPositionAsync(player.GetPlayPosition() + 5000, false);
+                            player.SetPlayPositionAsync(player.GetPlayPosition() + 10000, false);
                             break;
 
                         case "Left":
-                            player.SetPlayPositionAsync(player.GetPlayPosition() - 5000, false);
+                            player.SetPlayPositionAsync(player.GetPlayPosition() - 10000, false);
                             break;
 
                         case "XF86Back":
-                            _player.Dispose();
+                            _player.CloseVideo();
                             break;
 
                         default:

@@ -25,7 +25,7 @@ namespace AnilibriaAppTizen.Services
             _imagesList = new List<string>();
         }
 
-        private async Task InitializeAsync()
+        public async Task InitializeAsync()
         {
             if (!_isInitialized)
             {
@@ -61,16 +61,16 @@ namespace AnilibriaAppTizen.Services
             return filePath;
         }
 
-        public async Task<string> GetPath(string imagePath)
+        public string GetPath(string imagePath)
         {
-            await InitializeAsync();
+            //await InitializeAsync();
             //return _baseUri + imagePath;
 
             if (CacheContains(imagePath))
                 return GetCachedImage(imagePath);
             else
             {
-                _ = CacheImageAsync(imagePath);
+                _ = Task.Run(() => CacheImageAsync(imagePath));
                 return _baseUri + imagePath;
             }
         }
