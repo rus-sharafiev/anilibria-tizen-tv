@@ -1,9 +1,4 @@
-﻿using ElmSharp;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Data.Common;
 using Tizen.NUI;
 using Tizen.NUI.BaseComponents;
 
@@ -18,6 +13,10 @@ namespace AnilibriaAppTizen.Views
         private float _scrollPosition;
         private float _topScrollIndentation;
         private float _bottomScrollIndentation;
+
+        private View[,] _focusMatrix;
+        private View _leftView;
+        private View _topView;
 
         public View View
         {
@@ -43,6 +42,14 @@ namespace AnilibriaAppTizen.Views
             get => _bottomScrollIndentation;
             set => _bottomScrollIndentation = value;
         }
+        public View LeftFocusableView
+        {
+            set => _leftView = value;
+        }
+        public View UpFocusableView
+        {
+            set => _topView = value;
+        }
 
         public ScrollContainer()
         {
@@ -56,7 +63,10 @@ namespace AnilibriaAppTizen.Views
         private void Initialize()
         {
             _scrollPosition = 0;
-            _scrollContainer = new View();
+            _scrollContainer = new View
+            {
+                //ClippingMode = ClippingModeType.ClipChildren
+            };
         }
 
         public void ScrollTo(View focusedView)
@@ -91,6 +101,56 @@ namespace AnilibriaAppTizen.Views
             _scrollAnimation = new Animation(_animationDuration);
             _scrollAnimation.AnimateTo(_scrollContainer, "PositionY", destination, _alphaFunction);
             _scrollAnimation.Play();
+        }
+
+        public void CreateFocusMatrix(int rows, int columns)
+        {
+            _focusMatrix = new View[rows, columns];
+        }
+
+        public void AddToFocusMatrix(int row, int column, View view)
+        {
+            _focusMatrix[row, column] = view;
+        }
+
+        public void GenerateFocusMatrix()
+        {
+            for (int r = 0; r < _focusMatrix.GetLength(0); r++)
+                for (int c = 0; c < _focusMatrix.GetLength(1); c++)
+                    if (_focusMatrix[r, c] != null)
+                    {
+                        if (r > 0)
+                            _focusMatrix[r, c].UpFocusableView = GetClothestView(r - 1, c);
+                        else if (r == 0)
+                            _focusMatrix[r, c].UpFocusableView = _topView;
+
+                        if (r < _focusMatrix.GetLength(0) - 1)
+                            _focusMatrix[r, c].DownFocusableView = GetClothestView(r + 1, c);
+
+                        if (c > 0)
+                            _focusMatrix[r, c].LeftFocusableView = _focusMatrix[r, c - 1];
+                        else if (c == 0)
+                            _focusMatrix[r, c].LeftFocusableView = _leftView;
+
+                        if (c < _focusMatrix.GetLength(1) - 1)
+                            _focusMatrix[r, c].RightFocusableView = _focusMatrix[r, c + 1];
+                    }
+        }
+
+        private View GetClothestView(int r, int c)
+        {
+            if (_focusMatrix[r, c] != null)
+                return _focusMatrix[r, c];
+            else if (c > 0)
+                for (int i = c - 1; i > 0; i--)
+                {
+                    if (_focusMatrix[r, i] != null)
+                    {
+                        return _focusMatrix[r, i];
+                    }
+                }
+
+            return null;
         }
     }
 }

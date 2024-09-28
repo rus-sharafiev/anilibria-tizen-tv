@@ -40,11 +40,17 @@ namespace AnilibriaAppTizen.Views
             _imageService = imageService;
         }
 
-        public async void RenderTo(Main main, Release release, bool updateData = false)
+        public void RenderTo(Main main)
         {
             _isActive = true;
             main.SetTitle("Расписание", "выхода новых эпизодов", 320);
 
+            if (_scrollContainer != null)
+                _mainView.Add(_scrollContainer.View);
+        }
+
+        public async void InitializeAsync(Main main, bool updateData = false)
+        {
             _mainView = main.View;
             _activeMenuBtn = main.ActiveMenuButton.View;
 
@@ -70,6 +76,7 @@ namespace AnilibriaAppTizen.Views
             catch (Exception e)
             {
                 new Error(e);
+                return;
             }
             finally
             {
@@ -77,7 +84,7 @@ namespace AnilibriaAppTizen.Views
             }
 
             // Calc rows qty
-            var rows = 0;
+            int rows = 0;
             foreach (var day in _weekDays)
             {
                 rows += 1 + (int)Math.Ceiling((float)day.Releases.Count / _columns);
@@ -88,6 +95,7 @@ namespace AnilibriaAppTizen.Views
                 TopScrollIndentation = _dayLabelfontSize,
                 BottomScrollIndentation = _posterHeight * 0.2f,
             };
+            _scrollContainer.View.RemovedFromWindow += ScheduleView_RemovedFromWindow;
             _mainView.Add(_scrollContainer.View);
 
             _scheduleView = new View()
@@ -103,10 +111,9 @@ namespace AnilibriaAppTizen.Views
                 PositionX = _posterWidth * 0.1f + _posterSpacing
             };
             _scrollContainer.View.Add(_scheduleView);
-            _scrollContainer.View.RemovedFromWindow += ScheduleView_RemovedFromWindow;
 
-            var focusMatrixRow = 0;
-            var focusMatrix = new View[rows, _columns];
+            int focusMatrixRow = 0;
+            _scrollContainer.CreateFocusMatrix(rows, _columns);
 
             int row = 0;
             foreach (var day in _weekDays)
@@ -152,7 +159,7 @@ namespace AnilibriaAppTizen.Views
                     GridLayout.SetColumn(releasePoster.View, column);
                     GridLayout.SetRow(releasePoster.View, row);
 
-                    focusMatrix[focusMatrixRow, column] = releasePoster.View;
+                    _scrollContainer.AddToFocusMatrix(focusMatrixRow, column, releasePoster.View);
 
                     if (column + 1 < _columns)
                     {
@@ -172,41 +179,8 @@ namespace AnilibriaAppTizen.Views
                 }
             }
 
-            // Create focus matrix
-            for (int r = 0; r < focusMatrix.GetLength(0); r++)
-                for (int c = 0; c < focusMatrix.GetLength(1); c++)
-                    if (focusMatrix[r, c] != null)
-                    {
-                        if (r > 0)
-                            focusMatrix[r, c].UpFocusableView = GetClothestView(focusMatrix, r - 1, c);
-
-                        if (r < focusMatrix.GetLength(0) - 1)
-                            focusMatrix[r, c].DownFocusableView = GetClothestView(focusMatrix, r + 1, c);
-
-                        if (c > 0)
-                            focusMatrix[r, c].LeftFocusableView = focusMatrix[r, c - 1];
-                        else if (c == 0)
-                            focusMatrix[r, c].LeftFocusableView = _activeMenuBtn;
-
-                        if (c < focusMatrix.GetLength(1) - 1)
-                            focusMatrix[r, c].RightFocusableView = focusMatrix[r, c + 1];
-                    }
-        }
-
-        private View GetClothestView(View[,] focusMatrix, int r, int c)
-        {
-            if (focusMatrix[r, c] != null)
-                return focusMatrix[r, c];
-            else if (c > 0)
-                for (int i = c - 1; i > 0; i--)
-                {
-                    if (focusMatrix[r, i] != null)
-                    {
-                        return focusMatrix[r, i];
-                    }
-                }
-
-            return null;
+            _scrollContainer.LeftFocusableView = _activeMenuBtn;
+            _scrollContainer.GenerateFocusMatrix();
         }
 
         private void ReleasePoster_FocusGained(object sender, EventArgs e)
@@ -220,10 +194,8 @@ namespace AnilibriaAppTizen.Views
 
         private void ScheduleView_RemovedFromWindow(object sender, EventArgs e)
         {
-            _lastFocusedView = null;
+            //_lastFocusedView = null;
             _isActive = false;
-            _scheduleView.Dispose();
-            _scheduleView = null;
         }
     }
 }

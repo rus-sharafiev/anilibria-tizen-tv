@@ -40,7 +40,7 @@ namespace AnilibriaAppTizen.Views
             InitializeAsync();
         }
 
-        private async void InitializeAsync()
+        private void InitializeAsync()
         {
             _episodeView = new View
             {
@@ -68,7 +68,7 @@ namespace AnilibriaAppTizen.Views
 
             var previewVisual = new ImageVisual
             {
-                URL = await _imageService.GetPath(_episodeData.Preview.Thumbnail),
+                URL = _imageService.GetPath(_episodeData.Preview.Thumbnail),
                 AlphaMaskURL = Application.Current.DirectoryInfo.SharedResource + "images/episodePreviewAlphaMask.png",
                 SizePolicy = VisualTransformPolicyType.Absolute,
                 Size = new Size2D(200, 113),
